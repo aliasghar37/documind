@@ -20,7 +20,7 @@ export default function MyBreadcrumb() {
     }));
 
     return (
-        <BreadcrumbList>
+        <BreadcrumbList className="text-base">
             {crumbs.map((crumb) => (
                 <React.Fragment key={crumb.href}>
                     <BreadcrumbItem>

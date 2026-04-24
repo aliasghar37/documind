@@ -1,0 +1,112 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+    Show,
+    SignInButton,
+    SignUpButton,
+    UserButton,
+    useUser,
+} from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import {
+    NavigationMenu,
+    NavigationMenuItem,
+    NavigationMenuLink,
+    NavigationMenuList,
+    navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+
+const navLinks = [
+    { label: "Home", href: "/" },
+    { label: "Features", href: "/#features" },
+    { label: "About Us", href: "/#about" },
+    { label: "Contact Us", href: "/#contact" },
+];
+
+export function TopNavbar() {
+    const pathname = usePathname();
+    const isDashboard = pathname.startsWith("/dashboard");
+    const { isSignedIn } = useUser();
+
+    return (
+        <header className="sticky top-0 z-40 w-full self-center border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
+            <div className="mx-auto flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-8">
+                <Link
+                    href="/"
+                    className="inline-flex items-center gap-2"
+                    aria-label="Documind Home"
+                >
+                    <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-2xl">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="white"
+                            width={28}
+                        >
+                            <path d="M13 3.99996H6C5.44773 3.99996 5.00003 4.4477 5 4.99996V15.3369C5.45462 15.1209 5.96321 15 6.5 15H19V9.99997H21V21C21 21.5523 20.5523 22 20 22H6.5C4.567 22 3 20.433 3 18.5V4.99996C3.00003 3.34313 4.34316 1.99996 6 1.99996H13V3.99996ZM6.5 17C5.67159 17 5.00003 17.6716 5 18.5C5 19.3284 5.67157 20 6.5 20H19V17H6.5ZM18.5293 0.329292C18.7059 -0.0964934 19.2942 -0.0965048 19.4707 0.329292L19.7236 0.940621C20.1556 1.98342 20.9616 2.81613 21.9746 3.2668L22.6924 3.58613C23.1026 3.76896 23.1026 4.36615 22.6924 4.54903L21.9326 4.88692C20.9449 5.3262 20.1534 6.12942 19.7139 7.1379L19.4668 7.70333C19.2864 8.11746 18.7137 8.11746 18.5332 7.70333L18.2871 7.1379C17.8476 6.12926 17.0552 5.32625 16.0674 4.88692L15.3076 4.54903C14.8974 4.36617 14.8974 3.76894 15.3076 3.58613L16.0254 3.2668C17.0385 2.81614 17.8445 1.98343 18.2764 0.940621L18.5293 0.329292Z"></path>
+                        </svg>
+                    </span>
+                    <span className="text-lg font-semibold tracking-wide">
+                        Documind
+                    </span>
+                </Link>
+
+                {!isDashboard && (
+                    <NavigationMenu className="hidden md:flex">
+                        <NavigationMenuList>
+                            {navLinks.map((link) => (
+                                <NavigationMenuItem key={link.href}>
+                                    <NavigationMenuLink
+                                        asChild
+                                        className={cn(
+                                            navigationMenuTriggerStyle(),
+                                            "text-base",
+                                            pathname === link.href &&
+                                                "bg-muted text-foreground",
+                                        )}
+                                    >
+                                        <Link href={link.href}>
+                                            {link.label}
+                                        </Link>
+                                    </NavigationMenuLink>
+                                </NavigationMenuItem>
+                            ))}
+                        </NavigationMenuList>
+                    </NavigationMenu>
+                )}
+                {!isDashboard && (
+                    <div className="flex items-center gap-2">
+                        {!isSignedIn ? (
+                            <>
+                                <SignInButton mode="modal">
+                                    <Button
+                                        variant="ghost"
+                                        className="text-base"
+                                    >
+                                        Sign In
+                                    </Button>
+                                </SignInButton>
+                                <SignUpButton mode="redirect">
+                                    <Button className="text-base">
+                                        Sign Up
+                                    </Button>
+                                </SignUpButton>
+                            </>
+                        ) : (
+                            <>
+                                <Button asChild className="text-base">
+                                    <Link href="/dashboard">Dashboard</Link>
+                                </Button>
+                                <UserButton />
+                            </>
+                        )}
+                    </div>
+                )}
+                {isDashboard && <UserButton />}
+            </div>
+        </header>
+    );
+}
