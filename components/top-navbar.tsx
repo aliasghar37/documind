@@ -2,12 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-    SignInButton,
-    SignUpButton,
-    UserButton,
-    useUser,
-} from "@clerk/nextjs";
+import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -96,7 +91,10 @@ export function TopNavbar() {
                             </>
                         ) : (
                             <>
-                                <Button asChild className="text-base">
+                                <Button
+                                    asChild
+                                    className="bg-linear-to-t from-primary to-indigo-700"
+                                >
                                     <Link href="/dashboard">Dashboard</Link>
                                 </Button>
                                 <UserButton />

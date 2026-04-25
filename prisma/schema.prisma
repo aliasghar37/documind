@@ -27,7 +27,8 @@ enum MessageRole {
 model User {
   id           String     @id @default(auto()) @map("_id") @db.ObjectId
   clerkUserId  String     @unique
-  name         String?
+  firstName    String
+  lastName     String
   email        String     @unique
   imageUrl     String?
   role         UserRole   @default(FREE)
