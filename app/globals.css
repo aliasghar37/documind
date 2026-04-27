@@ -49,75 +49,80 @@
 }
 
 :root {
-    --background: #19191b;
-    --foreground: #f4f4f6;
-    --card: #232326;
-    --card-foreground: #f4f4f6;
-    --popover: #232326;
-    --popover-foreground: #f4f4f6;
-    --primary: #494be7;
-    --bg-color-brand-primary: #080819;
-    --primary-foreground: #ffffff;
-    --secondary: #353540;
-    --secondary-foreground: #f4f4f6;
-    --muted: #2b2b31;
-    --muted-foreground: #95959f;
-    --accent: #494be7;
-    --accent-foreground: #ffffff;
+    /* Primary Backgrounds from palette */
+    --background: #f4f4f4; /* Lighthouse */
+    --foreground: #1f2328;
+    --card: #fefefe; /* White as Heaven */
+    --card-foreground: #1f2328;
+    --popover: #fefefe;
+    --popover-foreground: #1f2328;
+
+    /* Main Accents */
+    --primary: #476e66; /* Pond Newt (Main Theme Color) */
+    --primary-foreground: #fefefe;
+
+    /* Secondary & Muted Tones */
+    --secondary: #dfdfe2; /* Wayward Wind */
+    --secondary-foreground: #2a2f35;
+    --muted: #dfdfe2;
+    --muted-foreground: #708a83; /* Misty Moor (Used for labels) */
+
+    --accent: #708a83; /* Misty Moor */
+    --accent-foreground: #fefefe;
+
     --destructive: #ef4444;
-    --border: color-mix(in srgb, #5e5d62 32%, #19191b);
-    --input: color-mix(in srgb, #5e5d62 24%, #19191b);
-    --ring: #494be7;
-    --chart-1: #494be7;
-    --chart-2: #95959f;
-    --chart-3: #5e5d62;
-    --chart-4: #353540;
-    --chart-5: #232326;
+    --border: #bec0bf; /* Rough Asphalt */
+    --input: #bec0bf;
+    --ring: #476e66;
+
+    /* Sidebar specific */
+    --sidebar: #fefefe;
+    --sidebar-foreground: #1f2328;
+    --sidebar-primary: #476e66;
+    --sidebar-primary-foreground: #fefefe;
+    --sidebar-accent: #f4f4f4;
+    --sidebar-accent-foreground: #476e66;
+    --sidebar-border: #dfdfe2;
+
     --radius: 0.625rem;
-    --sidebar: #232326;
-    --sidebar-foreground: #f4f4f6;
-    --sidebar-primary: #494be7;
-    --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #353540;
-    --sidebar-accent-foreground: #f4f4f6;
-    --sidebar-border: color-mix(in srgb, #5e5d62 28%, #19191b);
-    --sidebar-ring: #494be7;
 }
 
 .dark {
-    --background: #19191b;
-    --foreground: #f4f4f6;
-    --card: #232326;
-    --card-foreground: #f4f4f6;
-    --popover: #232326;
-    --popover-foreground: #f4f4f6;
-    /* --primary: #494be7; */
-    --primary: #0f172a;
-    --btn-secondary: #080819;
-    --primary-foreground: #ffffff;
-    --secondary: #353540;
-    --secondary-foreground: #f4f4f6;
-    --muted: #2b2b31;
-    --muted-foreground: #95959f;
-    --accent: #494be7;
-    --accent-foreground: #ffffff;
-    --destructive: #ef4444;
-    --border: color-mix(in srgb, #5e5d62 32%, #19191b);
-    --input: color-mix(in srgb, #5e5d62 24%, #19191b);
-    --ring: #494be7;
-    --chart-1: #494be7;
-    --chart-2: #95959f;
-    --chart-3: #5e5d62;
-    --chart-4: #353540;
-    --chart-5: #232326;
-    --sidebar: #232326;
-    --sidebar-foreground: #f4f4f6;
-    --sidebar-primary: #494be7;
-    --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #353540;
-    --sidebar-accent-foreground: #f4f4f6;
-    --sidebar-border: color-mix(in srgb, #5e5d62 28%, #19191b);
-    --sidebar-ring: #494be7;
+    /* Deep Muted Charcoal/Teal Base */
+    --background: #0d1110;
+    --foreground: #f4f4f4;
+    --card: #151b1a;
+    --card-foreground: #f4f4f4;
+    --popover: #151b1a;
+    --popover-foreground: #f4f4f4;
+
+    /* Elevated Teal for Dark Mode Visibility */
+    --primary: #5fa295;
+    --primary-foreground: #0d1110;
+
+    --secondary: #1c2422;
+    --secondary-foreground: #f4f4f4;
+    --muted: #242d2b;
+    --muted-foreground: #9ca3af;
+
+    --accent: #708a83;
+    --accent-foreground: #f4f4f4;
+
+    --destructive: #7f1d1d;
+    --border: #242d2b;
+    --input: #242d2b;
+    --ring: #5fa295;
+
+    /* Sidebar Dark */
+    --sidebar: #0f1413;
+    --sidebar-foreground: #f4f4f4;
+    --sidebar-primary: #5fa295;
+    --sidebar-primary-foreground: #0d1110;
+    --sidebar-accent: #1c2422;
+    --sidebar-accent-foreground: #f4f4f4;
+    --sidebar-border: #242d2b;
+
+    --radius: 0.625rem;
 }
 
 @layer base {

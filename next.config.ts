@@ -2,12 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
     /* config options here */
-    productionBrowserSourceMaps: false,
-    experimental: {
-        preloadEntriesOnStart: false,
-        webpackMemoryOptimizations: true,
-        serverSourceMaps: false,
-    },
+    // productionBrowserSourceMaps: false,
+    // experimental: {
+    //     preloadEntriesOnStart: false,
+    //     webpackMemoryOptimizations: true,
+    //     serverSourceMaps: false,
+    // },
 };
 
 export default nextConfig;

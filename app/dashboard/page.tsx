@@ -1,79 +1,151 @@
-import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import Projects from "./components/Projects";
+import Documents from "./components/Documents";
 
-const metricesData = [
+export type Project = {
+    id: number;
+    title: string;
+    documents: number;
+    date: string;
+    tags: string[];
+    description: string;
+};
+
+export type Document = {
+    name: string;
+    project: string;
+    fileType: "PDF" | "DOCX";
+    updated: string;
+    status: "Indexed" | "Queued";
+};
+
+export const initialProjects: Project[] = [
     {
-        title: 4885,
-        description: "Token Usage",
+        id: 1,
+        title: "Product Name",
+        documents: 4,
+        date: "Apr 12",
+        tags: ["AI", "Personal Development", "Novels"],
+        description:
+            'The card component supports a size prop that can be set to "sm" for a more compact appearance. The card component supports a size prop that can be set to "sm" for a more compact appearance.',
     },
     {
-        title: 7,
-        description: "Projects Created",
+        id: 9,
+        title: "Product Name",
+        documents: 4,
+        date: "Apr 12",
+        tags: ["AI", "Personal Development", "Novels"],
+        description:
+            'The card component supports a size prop that can be set to "sm" for a more compact appearance. The card component supports a size prop that can be set to "sm" for a more compact appearance.',
     },
     {
-        title: 13,
-        description: "Documents Uploaded",
+        id: 8,
+        title: "Product Name",
+        documents: 4,
+        date: "Apr 12",
+        tags: ["AI", "Personal Development", "Novels"],
+        description:
+            'The card component supports a size prop that can be set to "sm" for a more compact appearance. The card component supports a size prop that can be set to "sm" for a more compact appearance.',
     },
     {
-        title: "Free",
-        description: "User Type",
+        id: 3,
+        title: "Product Name",
+        documents: 4,
+        date: "Apr 12",
+        tags: ["AI", "Personal Development", "Novels"],
+        description:
+            'The card component supports a size prop that can be set to "sm" for a more compact appearance.',
+    },
+    {
+        id: 4,
+        title: "Product Name",
+        documents: 4,
+        date: "Apr 12",
+        tags: ["AI", "Personal Development", "Novels"],
+        description:
+            'The card component supports a size prop that can be set to "sm" for a more compact appearance.',
+    },
+    {
+        id: 5,
+        title: "Product Name",
+        documents: 4,
+        date: "Apr 12",
+        tags: ["AI", "Personal Development", "Novels"],
+        description:
+            'The card component supports a size prop that can be set to "sm" for a more compact appearance.',
+    },
+    {
+        id: 6,
+        title: "Product Name",
+        documents: 4,
+        date: "Apr 12",
+        tags: ["AI", "Personal Development", "Novels"],
+        description:
+            'The card component supports a size prop that can be set to "sm" for a more compact appearance.',
+    },
+    {
+        id: 2,
+        title: "Product Name",
+        documents: 4,
+        date: "Apr 12",
+        tags: ["AI", "Personal Development", "Novels"],
+        description:
+            'The card component supports a size prop that can be set to "sm" for a more compact appearance.',
+    },
+];
+
+export const recentDocuments: Document[] = [
+    {
+        name: "PRD-v2.pdf",
+        project: "Product Name",
+        fileType: "PDF",
+        updated: "2h ago",
+        status: "Indexed",
+    },
+    {
+        name: "Audience-Notes.docx",
+        project: "Product Name",
+        fileType: "DOCX",
+        updated: "5h ago",
+        status: "Indexed",
+    },
+    {
+        name: "Sprint-Outline.md",
+        project: "Product Name",
+        fileType: "PDF",
+        updated: "Yesterday",
+        status: "Queued",
+    },
+    {
+        name: "Brand-Voice.txt",
+        project: "Product Name",
+        fileType: "PDF",
+        updated: "Yesterday",
+        status: "Indexed",
+    },
+    {
+        name: "Competitor-Analysis.pdf",
+        project: "Product Name",
+        fileType: "PDF",
+        updated: "Apr 24",
+        status: "Indexed",
+    },
+    {
+        name: "Feature-Ideas.xlsx",
+        project: "Product Name",
+        fileType: "DOCX",
+        updated: "Apr 21",
+        status: "Queued",
     },
 ];
 
 export default function CardSmall() {
+    const visibleProjects = initialProjects.slice(0, 3);
+    const visibleDocuments = recentDocuments.slice(0, 6);
+
     return (
-        <div className="flex flex-col gap-12" >
-            <div className="grid grid-cols-4">
-                {metricesData.map((data) => {
-                    return (
-                        <Card
-                            key={data.description}
-                            size="default"
-                            className="mx-auto w-full max-w-sm"
-                        >
-                            <CardHeader>
-                                <CardTitle className="text-2xl text-foreground ">
-                                    {data.title}
-                                </CardTitle>
-                                <CardDescription className="text-lg">
-                                    {data.description}
-                                </CardDescription>
-                            </CardHeader>
-                        </Card>
-                    );
-                })}
-            </div>
-            <div>
-                <Card size="sm" className="mx-auto w-full max-w-sm">
-                    <CardHeader>
-                        <CardTitle>Product Name</CardTitle>
-                        <CardDescription>
-                            tag, tag, tag, tag, tag
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <p>
-                            The card component supports a size prop that can be
-                            set to &quot;sm&quot; for a more compact appearance.
-                        </p>
-                    </CardContent>
-                    <CardFooter className="flex ">
-                        <Button variant="outline" size="sm" className="w-1/2">
-                            Open Project
-                        </Button>
-                        <Button variant="outline" size="sm" className="w-1/2">
-                            Edit Project
-                        </Button>
-                    </CardFooter>
-                </Card>
-            </div>
+        <div className="flex flex-col gap-12">
+            <Projects page="overview" projects={visibleProjects} />
+            <Documents recentDocuments={visibleDocuments} />
         </div>
     );
 }

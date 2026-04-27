@@ -1,3 +1,10 @@
-export default function() {
-    return <h1>Knowledge-base</h1>
+import Documents from "../components/Documents";
+import { recentDocuments } from "../page";
+
+export default function () {
+    return (
+        <div className="flex flex-col gap-12">
+            <Documents recentDocuments={recentDocuments} />
+        </div>
+    );
 }

@@ -1,3 +1,10 @@
+import Projects from "../components/Projects";
+import { initialProjects } from "../page";
+
 export default function () {
-    return <h1>Projects</h1>;
+    return (
+        <div className="flex flex-col gap-12">
+            <Projects projects={initialProjects} page={"projects"} />;
+        </div>
+    );
 }
