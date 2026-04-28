@@ -13,7 +13,6 @@ export type Project = {
 export type Document = {
     name: string;
     project: string;
-    fileType: "PDF" | "DOCX";
     updated: string;
     status: "Indexed" | "Queued";
 };
@@ -97,42 +96,36 @@ export const recentDocuments: Document[] = [
     {
         name: "PRD-v2.pdf",
         project: "Product Name",
-        fileType: "PDF",
         updated: "2h ago",
         status: "Indexed",
     },
     {
         name: "Audience-Notes.docx",
         project: "Product Name",
-        fileType: "DOCX",
         updated: "5h ago",
         status: "Indexed",
     },
     {
         name: "Sprint-Outline.md",
         project: "Product Name",
-        fileType: "PDF",
         updated: "Yesterday",
         status: "Queued",
     },
     {
         name: "Brand-Voice.txt",
         project: "Product Name",
-        fileType: "PDF",
         updated: "Yesterday",
         status: "Indexed",
     },
     {
         name: "Competitor-Analysis.pdf",
         project: "Product Name",
-        fileType: "PDF",
         updated: "Apr 24",
         status: "Indexed",
     },
     {
         name: "Feature-Ideas.xlsx",
         project: "Product Name",
-        fileType: "DOCX",
         updated: "Apr 21",
         status: "Queued",
     },

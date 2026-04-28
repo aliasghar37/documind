@@ -43,9 +43,6 @@ export default function Documents({
                                         Project
                                     </TableHead>
                                     <TableHead className="text-lg">
-                                        Type
-                                    </TableHead>
-                                    <TableHead className="text-lg">
                                         Updated
                                     </TableHead>
                                     <TableHead className="text-lg">
@@ -63,13 +60,24 @@ export default function Documents({
                                             {doc.project}
                                         </TableCell>
                                         <TableCell className="text-base">
-                                            {doc.fileType}
-                                        </TableCell>
-                                        <TableCell className="text-base">
                                             {doc.updated}
                                         </TableCell>
                                         <TableCell className="text-base">
                                             {doc.status}
+                                        </TableCell>
+                                        <TableCell className="text-base">
+                                            <Button
+                                                variant={"ghost"}
+                                                size={"lg"}
+                                            >
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 24 24"
+                                                    fill="currentColor"
+                                                >
+                                                    <path d="M7 4V2H17V4H22V6H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V6H2V4H7ZM6 6V20H18V6H6ZM9 9H11V17H9V9ZM13 9H15V17H13V9Z"></path>
+                                                </svg>
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
                                 ))}
