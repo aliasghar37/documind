@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { handleCreateProject } from "@/app/actions/handleCreateProject";
+import handleCreateProject from "@/app/actions/handleCreateProject";
 
 const MAX_FILES = 3;
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;

@@ -11,9 +11,11 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FormEvent, useMemo, useState } from "react";
-import { Project } from "../page";
+import { type Project, type Document } from "../page";
 import Link from "next/link";
 import { CreateNewProject } from "./NewProject";
+import { formatDate } from "@/lib/dateFormatter";
+import { init } from "next/dist/compiled/webpack/webpack";
 
 const badgePalette = [
     "bg-emerald-100 text-emerald-800 border-emerald-200",
@@ -26,28 +28,40 @@ const badgePalette = [
     "bg-cyan-100 text-cyan-800 border-cyan-200",
 ];
 
-export default function Projects({
+export default function ShowProjects({
     projects: initialProjects,
+    documents,
     page,
+    totalDocuments,
+    totalProjects,
 }: {
-    projects: Project[];
+    projects?: Project[];
+    documents?: Document[];
     page: "projects" | "overview";
+    totalDocuments?: number;
+    totalProjects?: number;
 }) {
-    const [projects, setProjects] = useState<Project[]>(initialProjects);
+    const [projects, setProjects] = useState<Project[]>(
+        initialProjects as Project[],
+    );
 
     const metricesData = useMemo(() => {
-        const totalDocuments = projects.reduce(
-            (sum, project) => sum + project.documents,
-            0,
-        );
-
         return [
             { title: 4885, description: "Token Usage" },
-            { title: projects.length, description: "Projects Created" },
+            { title: totalProjects, description: "Projects Created" },
             { title: totalDocuments, description: "Documents Uploaded" },
             { title: "Free", description: "User Type" },
         ];
     }, [projects]);
+
+    const projectsWithDocCounts = useMemo(() => {
+        return projects.map((project) => ({
+            ...project,
+            documentCount: documents?.filter(
+                (doc) => doc.projectId === project.id,
+            ).length,
+        }));
+    }, [projects, documents]);
 
     return (
         <>
@@ -76,7 +90,11 @@ export default function Projects({
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <h1 className="text-3xl">Recent Projects</h1>
+                    <h1 className="text-3xl">
+                        {page === "overview"
+                            ? "Recent Projects"
+                            : "All Projects"}
+                    </h1>
                 </div>
                 <div className="flex justify-center items-center gap-2">
                     <Button asChild variant="secondary" size="lg">
@@ -89,7 +107,7 @@ export default function Projects({
             </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                {projects.map((project) => (
+                {projectsWithDocCounts.map((project) => (
                     <Card
                         key={project.id}
                         size="default"
@@ -111,7 +129,7 @@ export default function Projects({
                                             <path d="M21 8V20.9932C21 21.5501 20.5552 22 20.0066 22H3.9934C3.44495 22 3 21.556 3 21.0082V2.9918C3 2.45531 3.4487 2 4.00221 2H14.9968L21 8ZM19 9H14V4H5V20H19V9ZM8 7H11V9H8V7ZM8 11H16V13H8V11ZM8 15H16V17H8V15Z"></path>
                                         </svg>
                                         <p className="text-base">
-                                            Documents ({project.documents})
+                                            Documents ({project.documentCount})
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -124,20 +142,32 @@ export default function Projects({
                                             <path d="M17 3H21C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3H7V1H9V3H15V1H17V3ZM4 9V19H20V9H4ZM6 11H8V13H6V11ZM11 11H13V13H11V11ZM16 11H18V13H16V11Z"></path>
                                         </svg>
                                         <p className="text-base">
-                                            {project.date}
+                                            {formatDate(project.updatedAt)}
                                         </p>
                                     </div>
                                 </div>
 
                                 <div className="mt-2 flex flex-wrap gap-1">
-                                    {project.tags.map((tag, i) => (
-                                        <Badge
-                                            key={`${project.id}-${tag}`}
-                                            className={badgePalette[i]}
-                                        >
-                                            {tag}
-                                        </Badge>
-                                    ))}
+                                    {Array.isArray(
+                                        (project.metadata as any)?.tags,
+                                    )
+                                        ? (
+                                              (project.metadata as any)
+                                                  .tags as string[]
+                                          ).map((tag: string, i: number) => (
+                                              <Badge
+                                                  key={`${project.id}-${i}`}
+                                                  className={
+                                                      badgePalette[
+                                                          i %
+                                                              badgePalette.length
+                                                      ]
+                                                  }
+                                              >
+                                                  {tag}
+                                              </Badge>
+                                          ))
+                                        : null}
                                 </div>
                             </CardDescription>
                         </CardHeader>

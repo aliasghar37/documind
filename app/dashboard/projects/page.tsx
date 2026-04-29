@@ -1,10 +1,24 @@
-import Projects from "../components/Projects";
-import { initialProjects } from "../page";
+import ShowProjects from "../components/ShowProjects";
+import { getDashboardData } from "../data";
 
-export default function () {
+export default async function DashboardProjectsPage() {
+    const data = await getDashboardData();
+
+    if (!data.success) {
+        return (
+            <div className="flex flex-col gap-12">
+                <ShowProjects projects={[]} documents={[]} page="projects" />
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col gap-12">
-            <Projects projects={initialProjects} page={"projects"} />;
+            <ShowProjects
+                projects={data.projects}
+                documents={data.documents}
+                page="projects"
+            />
         </div>
     );
 }

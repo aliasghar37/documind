@@ -10,18 +10,25 @@ import {
 } from "@/components/ui/table";
 import { Document } from "../page";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatDate } from "@/lib/dateFormatter";
 
-export default function Documents({
+export default function ShowDocuments({
     recentDocuments,
+    page,
 }: {
     recentDocuments: Document[];
+    page: "overview" | "documents";
 }) {
     return (
         <>
             <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <h1 className="text-3xl">Recent Documents</h1>
+                        <h1 className="text-3xl">
+                            {page === "overview"
+                                ? "Recent Documents"
+                                : "All Documents"}
+                        </h1>
                     </div>
 
                     <Button asChild variant="secondary" size="lg">
@@ -52,18 +59,18 @@ export default function Documents({
                             </TableHeader>
                             <TableBody>
                                 {recentDocuments.map((doc) => (
-                                    <TableRow key={doc.name}>
+                                    <TableRow key={doc.fileUrl}>
                                         <TableCell className="text-base">
-                                            {doc.name}
+                                            {doc.fileName}
                                         </TableCell>
                                         <TableCell className="text-base">
-                                            {doc.project}
+                                            {doc.projectId}
                                         </TableCell>
                                         <TableCell className="text-base">
-                                            {doc.updated}
+                                            {formatDate(doc.updatedAt)}
                                         </TableCell>
                                         <TableCell className="text-base">
-                                            {doc.status}
+                                            {"Add Status later"}
                                         </TableCell>
                                         <TableCell className="text-base">
                                             <Button
