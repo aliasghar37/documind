@@ -7,7 +7,7 @@ export default async function DashboardProjectsPage() {
     if (!data.success) {
         return (
             <div className="flex flex-col gap-12">
-                <ShowProjects projects={[]} documents={[]} page="projects" />
+                <ShowProjects page="projects" />
             </div>
         );
     }
@@ -16,7 +16,7 @@ export default async function DashboardProjectsPage() {
         <div className="flex flex-col gap-12">
             <ShowProjects
                 projects={data.projects}
-                documents={data.documents}
+                // documents={data.documents}
                 page="projects"
             />
         </div>

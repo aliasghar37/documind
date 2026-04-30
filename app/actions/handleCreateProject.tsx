@@ -4,6 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
+import {
+    AI_PERSONAS,
+    type AiPersonaType,
+    ProjectTag,
+    PROJECT_TAG_OPTIONS,
+    ProjectTags,
+} from "../dashboard/components/NewProject";
 
 const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET;
 
@@ -56,12 +63,31 @@ export async function handleCreateProject(
     const title = (formData.get("title") as string) || "";
     const description = (formData.get("description") as string) || "";
     const selectedTagsRaw = formData.get("selectedTags") as string | null;
+    const webSearchRaw = formData.get("webSearch") as string | null;
+    const webSearch = webSearchRaw === "true";
+    const aiPersona = formData.get("aiPersona") as string;
 
-    let selectedTags: string[] = [];
+    if (!aiPersona || !AI_PERSONAS.includes(aiPersona as AiPersonaType))
+        return { success: false, message: "Only select allowed AI personas" };
+
+    let selectedTags: ProjectTags = ["Others"];
     try {
-        if (selectedTagsRaw) selectedTags = JSON.parse(selectedTagsRaw);
+        if (selectedTagsRaw) {
+            const parsed = JSON.parse(selectedTagsRaw);
+            if (Array.isArray(parsed)) {
+                const validTags = parsed.filter(
+                    (tag): tag is ProjectTag =>
+                        typeof tag === "string" &&
+                        PROJECT_TAG_OPTIONS.includes(tag as ProjectTag),
+                );
+
+                if (validTags.length > 0) {
+                    selectedTags = validTags;
+                }
+            }
+        }
     } catch (e) {
-        selectedTags = [];
+        selectedTags = ["Others"];
     }
 
     if (
@@ -154,7 +180,10 @@ export async function handleCreateProject(
             data: {
                 title: title.trim(),
                 metadata: { tags: selectedTags },
-                projectSettings: { createdWith: "handleCreateProject" },
+                projectSettings: {
+                    webSearch,
+                    aiPersona,
+                },
                 userId: dbUser.id,
                 documents: {
                     create: uploadedFiles.map((f) => ({

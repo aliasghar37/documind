@@ -33,7 +33,17 @@ const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const MAX_TITLE_LENGTH = 50;
 const MAX_DESCRIPTION_LENGTH = 1500;
 
-const PROJECT_TAG_OPTIONS = [
+export type AiPersonaType =
+    | "Reading Assistant"
+    | "Technical Expert"
+    | "Creative Assistant";
+
+export const AI_PERSONAS: AiPersonaType[] = [
+    "Reading Assistant",
+    "Technical Expert",
+    "Creative Assistant",
+];
+export const PROJECT_TAG_OPTIONS = [
     "Book Reading",
     "Office Work",
     "Research",
@@ -42,13 +52,19 @@ const PROJECT_TAG_OPTIONS = [
     "Others",
     "Reports",
     "Presentations",
-];
+] as const;
+export type ProjectTag = (typeof PROJECT_TAG_OPTIONS)[number];
+export type ProjectTags = ProjectTag[];
 
 export function CreateNewProject() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const [selectedTags, setSelectedTags] = useState<ProjectTags>([]);
     const [files, setFiles] = useState<FileList | null>(null);
+    const [isWebSearch, setIsWebSearch] = useState(true);
+    const [selectAiPersona, setSelectAiPersona] = useState<AiPersonaType>(
+        AI_PERSONAS[0],
+    );
 
     const selectedFiles = useMemo(() => {
         return files ? Array.from(files) : [];
@@ -109,7 +125,7 @@ export function CreateNewProject() {
         setFiles(selectedFiles);
     };
 
-    const toggleTag = (tag: string) => {
+    const toggleTag = (tag: ProjectTag) => {
         setSelectedTags((currentTags) => {
             if (currentTags.includes(tag)) {
                 return currentTags.filter((currentTag) => currentTag !== tag);
@@ -152,6 +168,8 @@ export function CreateNewProject() {
         fd.append("title", trimmedTitle);
         fd.append("description", description || "");
         fd.append("selectedTags", JSON.stringify(selectedTags));
+        fd.append("aiPersona", `${selectAiPersona}`);
+        fd.append("webSearch", `${isWebSearch}`);
 
         for (const file of Array.from(files)) {
             fd.append("docs", file, file.name);
@@ -178,6 +196,8 @@ export function CreateNewProject() {
             setDescription("");
             setFiles(null);
             setSelectedTags([]);
+            setSelectAiPersona(AI_PERSONAS[0]);
+            setIsWebSearch(true);
         } catch (err) {
             console.error(err);
             toast.dismiss(loadingToastId);
@@ -322,21 +342,22 @@ export function CreateNewProject() {
                                 <Label>AI Persona</Label>
                                 <Select
                                     name="aiPersona"
-                                    defaultValue="academic"
+                                    defaultValue={AI_PERSONAS[0]}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select persona" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="academic">
-                                            Reading Assistant
-                                        </SelectItem>
-                                        <SelectItem value="technical">
-                                            Technical Expert
-                                        </SelectItem>
-                                        <SelectItem value="creative">
-                                            Creative Assistant
-                                        </SelectItem>
+                                        {AI_PERSONAS.map((persona) => {
+                                            return (
+                                                <SelectItem
+                                                    key={persona}
+                                                    value={persona}
+                                                >
+                                                    {persona}
+                                                </SelectItem>
+                                            );
+                                        })}
                                     </SelectContent>
                                 </Select>
                             </Field>
@@ -347,7 +368,10 @@ export function CreateNewProject() {
                                     <Switch
                                         id="web-search"
                                         name="webSearchEnabled"
-                                        defaultChecked
+                                        defaultChecked={isWebSearch}
+                                        onClick={(prev) =>
+                                            setIsWebSearch(!prev)
+                                        }
                                     />
                                     <span className="text-xs text-muted-foreground">
                                         Tavily API
