@@ -6,11 +6,11 @@ import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
 import {
     AI_PERSONAS,
-    type AiPersonaType,
-    ProjectTag,
     PROJECT_TAG_OPTIONS,
-    ProjectTags,
-} from "../dashboard/components/NewProject";
+    type AiPersonaType,
+    type ProjectTag,
+    type ProjectTags,
+} from "../dashboard/projectConstants";
 
 const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET;
 

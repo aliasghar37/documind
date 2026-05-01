@@ -2,6 +2,7 @@ import ShowProjects from "./components/ShowProjects";
 import ShowDocuments from "./components/ShowDocuments";
 import type { Prisma } from "@prisma/client";
 import { getDashboardData } from "./data";
+import type { ProjectSettings } from "./projectConstants";
 
 export type Project = {
     id: string;
@@ -11,7 +12,7 @@ export type Project = {
     title: string;
     description?: string;
     metadata: Prisma.JsonValue;
-    projectSettings: Prisma.JsonValue | null;
+    projectSettings: ProjectSettings | null;
 };
 
 export type Document = {

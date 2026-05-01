@@ -26,13 +26,13 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import handleCreateProject from "@/app/actions/handleCreateProject";
+import handleUpdateProject from "@/app/actions/handleUpdateProject";
 import {
     AI_PERSONAS,
     PROJECT_TAG_OPTIONS,
     type AiPersonaType,
-    type ProjectTag,
     type ProjectTags,
+    type ProjectTag,
 } from "../projectConstants";
 
 const MAX_FILES = 3;
@@ -40,15 +40,29 @@ const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const MAX_TITLE_LENGTH = 50;
 const MAX_DESCRIPTION_LENGTH = 1500;
 
-export function CreateNewProject() {
-    const [title, setTitle] = useState("");
-    const [description, setDescription] = useState("");
-    const [selectedTags, setSelectedTags] = useState<ProjectTags>([]);
-    const [files, setFiles] = useState<FileList | null>(null);
-    const [isWebSearch, setIsWebSearch] = useState(true);
-    const [selectAiPersona, setSelectAiPersona] = useState<AiPersonaType>(
-        AI_PERSONAS[0],
-    );
+export function UpdateProject({
+    oldTitle,
+    oldDescription,
+    oldSelectedTags,
+    oldDocuments,
+    oldIsWebSearch,
+    oldAiPersona,
+}: {
+    oldTitle: string;
+    oldDescription: string | null;
+    oldSelectedTags: ProjectTags;
+    oldDocuments: FileList | null;
+    oldIsWebSearch: boolean;
+    oldAiPersona: AiPersonaType;
+}) {
+    const [title, setTitle] = useState(oldTitle);
+    const [description, setDescription] = useState(oldDescription);
+    const [selectedTags, setSelectedTags] =
+        useState<ProjectTags>(oldSelectedTags);
+    const [files, setFiles] = useState<FileList | null>(oldDocuments);
+    const [isWebSearch, setIsWebSearch] = useState(oldIsWebSearch);
+    const [selectAiPersona, setSelectAiPersona] =
+        useState<AiPersonaType>(oldAiPersona);
 
     const selectedFiles = useMemo(() => {
         return files ? Array.from(files) : [];
@@ -133,7 +147,7 @@ export function CreateNewProject() {
             return;
         }
 
-        if (description.length > MAX_DESCRIPTION_LENGTH) {
+        if (description && description.length > MAX_DESCRIPTION_LENGTH) {
             toast.error(
                 `Description must be between 0 and ${MAX_DESCRIPTION_LENGTH} characters.`,
             );
@@ -144,9 +158,7 @@ export function CreateNewProject() {
             toast.error("Please upload at least one PDF file.");
             return;
         }
-        if (!validateFiles(files)) {
-            return;
-        }
+        if (!validateFiles(files)) return;
 
         const fd = new FormData();
         fd.append("title", trimmedTitle);
@@ -154,25 +166,22 @@ export function CreateNewProject() {
         fd.append("selectedTags", JSON.stringify(selectedTags));
         fd.append("aiPersona", `${selectAiPersona}`);
         fd.append("webSearch", `${isWebSearch}`);
-
         for (const file of Array.from(files)) {
             fd.append("docs", file, file.name);
         }
-
         setIsSubmitting(true);
+
         const loadingToastId = toast.loading(
             "Uploading files and creating project...",
         );
-
         try {
-            const result = await handleCreateProject(fd);
+            const result = await handleUpdateProject(fd);
 
             if (!result.success) {
                 toast.dismiss(loadingToastId);
                 toast.error(result.message || "Failed to create project");
                 return;
             }
-
             toast.dismiss(loadingToastId);
             toast.success("Project created successfully.");
 
@@ -194,16 +203,8 @@ export function CreateNewProject() {
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button size="lg" className="gap-2">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="w-5 h-5"
-                    >
-                        <path d="M4 3C3.44772 3 3 3.44772 3 4V10C3 10.5523 3.44772 11 4 11H10C10.5523 11 11 10.5523 11 10V4C11 3.44772 10.5523 3 10 3H4ZM4 13C3.44772 13 3 13.4477 3 14V20C3 20.5523 3.44772 21 4 21H10C10.5523 21 11 20.5523 11 20V14C11 13.4477 10.5523 13 10 13H4ZM14 13C13.4477 13 13 13.4477 13 14V20C13 20.5523 13.4477 21 14 21H20C20.5523 21 21 20.5523 21 20V14C21 13.4477 20.5523 13 20 13H14ZM15 19V15H19V19H15ZM5 9V5H9V9H5ZM5 19V15H9V19H5ZM16 11V8H13V6H16V3H18V6H21V8H18V11H16Z"></path>
-                    </svg>
-                    Create new project
+                <Button variant="outline" size="default" className="w-1/2 ">
+                    Edit Project
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
@@ -242,12 +243,12 @@ export function CreateNewProject() {
                                 name="description"
                                 placeholder="What is this project about?"
                                 maxLength={MAX_DESCRIPTION_LENGTH}
-                                value={description}
+                                value={description ? description : ""}
                                 onChange={(e) => setDescription(e.target.value)}
                                 className="resize-none h-28 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-track]:bg-gray-100 "
                             />
                             <p className="text-[10px] text-muted-foreground mt-1 text-right">
-                                {description.length}/{MAX_DESCRIPTION_LENGTH}
+                                {description?.length}/{MAX_DESCRIPTION_LENGTH}
                             </p>
                         </Field>
 
