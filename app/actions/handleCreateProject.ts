@@ -4,13 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
-import {
-    AI_PERSONAS,
-    PROJECT_TAG_OPTIONS,
-    type AiPersonaType,
-    type ProjectTag,
-    type ProjectTags,
-} from "../dashboard/projectConstants";
+// import {
+//     AI_PERSONAS,
+//     PROJECT_TAG_OPTIONS,
+//     type AiPersonaType,
+//     type ProjectTag,
+//     type ProjectTags,
+// } from "../dashboard/projectConstants";
 
 const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET;
 
@@ -67,28 +67,28 @@ export async function handleCreateProject(
     const webSearch = webSearchRaw === "true";
     const aiPersona = formData.get("aiPersona") as string;
 
-    if (!aiPersona || !AI_PERSONAS.includes(aiPersona as AiPersonaType))
-        return { success: false, message: "Only select allowed AI personas" };
+    // if (!aiPersona || !AI_PERSONAS.includes(aiPersona as AiPersonaType))
+    //     return { success: false, message: "Only select allowed AI personas" };
 
-    let selectedTags: ProjectTags = ["Others"];
-    try {
-        if (selectedTagsRaw) {
-            const parsed = JSON.parse(selectedTagsRaw);
-            if (Array.isArray(parsed)) {
-                const validTags = parsed.filter(
-                    (tag): tag is ProjectTag =>
-                        typeof tag === "string" &&
-                        PROJECT_TAG_OPTIONS.includes(tag as ProjectTag),
-                );
+    // let selectedTags: ProjectTags = ["Others"];
+    // try {
+    //     if (selectedTagsRaw) {
+    //         const parsed = JSON.parse(selectedTagsRaw);
+    //         if (Array.isArray(parsed)) {
+    //             const validTags = parsed.filter(
+    //                 (tag): tag is ProjectTag =>
+    //                     typeof tag === "string" &&
+    //                     PROJECT_TAG_OPTIONS.includes(tag as ProjectTag),
+    //             );
 
-                if (validTags.length > 0) {
-                    selectedTags = validTags;
-                }
-            }
-        }
-    } catch (e) {
-        selectedTags = ["Others"];
-    }
+    //             if (validTags.length > 0) {
+    //                 selectedTags = validTags;
+    //             }
+    //         }
+    //     }
+    // } catch (e) {
+    //     selectedTags = ["Others"];
+    // }
 
     if (
         typeof title !== "string" ||
@@ -179,7 +179,7 @@ export async function handleCreateProject(
         const project = await prisma.project.create({
             data: {
                 title: title.trim(),
-                metadata: { tags: selectedTags },
+                // metadata: { tags: selectedTags },
                 projectSettings: {
                     webSearch,
                     aiPersona,

@@ -16,14 +16,6 @@ import Link from "next/link";
 import { CreateNewProject } from "./NewProject";
 import { formatDate } from "@/lib/dateFormatter";
 import { UpdateProject } from "./UpdateProject";
-import {
-    AI_PERSONAS,
-    type AiPersonaType,
-    type ProjectTag,
-    type ProjectTags,
-    type ProjectSettings,
-    PROJECT_TAG_OPTIONS,
-} from "../projectConstants";
 
 const badgePalette = [
     "bg-emerald-100 text-emerald-800 border-emerald-200",
@@ -35,27 +27,6 @@ const badgePalette = [
     "bg-orange-100 text-orange-800 border-orange-200",
     "bg-cyan-100 text-cyan-800 border-cyan-200",
 ];
-
-function getProjectTags(metadata: unknown): ProjectTags {
-    if (!metadata || typeof metadata !== "object" || Array.isArray(metadata))
-        return ["Others"];
-
-    const tags = (metadata as { tags?: unknown }).tags;
-    if (!Array.isArray(tags)) return ["Others"];
-
-    const validTags = tags.filter(
-        (tag): tag is ProjectTag =>
-            typeof tag === "string" &&
-            PROJECT_TAG_OPTIONS.includes(tag as ProjectTag),
-    );
-    return validTags.length > 0 ? validTags : ["Others"];
-}
-
-function getProjectSettings(
-    projectSettings: ProjectSettings | null,
-): ProjectSettings {
-    return projectSettings ?? {};
-}
 
 export default function ShowProjects({
     projects: initialProjects,
@@ -177,20 +148,16 @@ export default function ShowProjects({
                                 </div>
 
                                 <div className="mt-2 flex flex-wrap gap-1">
-                                    {getProjectTags(project.metadata).map(
-                                        (tag, i) => (
-                                            <Badge
-                                                key={`${project.id}-${i}`}
-                                                className={
-                                                    badgePalette[
-                                                        i % badgePalette.length
-                                                    ]
-                                                }
-                                            >
-                                                {tag}
-                                            </Badge>
-                                        ),
-                                    )}
+                                    <Badge
+                                        key={`General Purpose`}
+                                        className={
+                                            badgePalette[
+                                                Math.floor(Math.random() * 6)
+                                            ]
+                                        }
+                                    >
+                                        General Purpose
+                                    </Badge>
                                 </div>
                             </CardDescription>
                         </CardHeader>
@@ -213,25 +180,11 @@ export default function ShowProjects({
                             <UpdateProject
                                 oldTitle={project.title}
                                 oldDescription={project.description ?? null}
-                                oldSelectedTags={getProjectTags(
-                                    project.metadata,
-                                )}
                                 oldDocuments={null}
-                                oldAiPersona={
-                                    AI_PERSONAS.includes(
-                                        getProjectSettings(
-                                            project.projectSettings,
-                                        ).aiPersona as AiPersonaType,
-                                    )
-                                        ? (getProjectSettings(
-                                              project.projectSettings,
-                                          ).aiPersona as AiPersonaType)
-                                        : AI_PERSONAS[0]
-                                }
                                 oldIsWebSearch={Boolean(
-                                    getProjectSettings(project.projectSettings)
-                                        .webSearch,
+                                    project.projectSettings.webSearch,
                                 )}
+                                oldProjectCategory="General Purpose"
                             />
                         </CardFooter>
                     </Card>

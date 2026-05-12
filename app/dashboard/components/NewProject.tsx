@@ -27,13 +27,26 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import handleCreateProject from "@/app/actions/handleCreateProject";
-import {
-    AI_PERSONAS,
-    PROJECT_TAG_OPTIONS,
-    type AiPersonaType,
-    type ProjectTag,
-    type ProjectTags,
-} from "../projectConstants";
+// import {
+//     AI_PERSONAS,
+//     PROJECT_TAG_OPTIONS,
+//     type AiPersonaType,
+//     type ProjectTag,
+//     type ProjectTags,
+// } from "../projectConstants";
+
+type ProjectCategoryType =
+    | "General Purpose"
+    | "Academic & Education"
+    | "Professional & Office"
+    | "Medical & Healthcare";
+
+const projectCategories: ProjectCategoryType[] = [
+    "General Purpose",
+    "Academic & Education",
+    "Professional & Office",
+    "Medical & Healthcare",
+];
 
 const MAX_FILES = 3;
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -43,33 +56,33 @@ const MAX_DESCRIPTION_LENGTH = 1500;
 export function CreateNewProject() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [selectedTags, setSelectedTags] = useState<ProjectTags>([]);
+    // const [selectedTags, setSelectedTags] = useState<ProjectTags>([]);
     const [files, setFiles] = useState<FileList | null>(null);
     const [isWebSearch, setIsWebSearch] = useState(true);
-    const [selectAiPersona, setSelectAiPersona] = useState<AiPersonaType>(
-        AI_PERSONAS[0],
+    const [projectCategory, setProjectCategory] = useState<ProjectCategoryType>(
+        projectCategories[0],
     );
 
     const selectedFiles = useMemo(() => {
         return files ? Array.from(files) : [];
     }, [files]);
 
-    const sortedTags = useMemo(() => {
-        return [...PROJECT_TAG_OPTIONS].sort((a, b) => {
-            const isASelected = selectedTags.includes(a);
-            const isBSelected = selectedTags.includes(b);
+    // const sortedTags = useMemo(() => {
+    //     return [...PROJECT_TAG_OPTIONS].sort((a, b) => {
+    //         const isASelected = selectedTags.includes(a);
+    //         const isBSelected = selectedTags.includes(b);
 
-            if (isASelected && !isBSelected) {
-                return -1;
-            }
+    //         if (isASelected && !isBSelected) {
+    //             return -1;
+    //         }
 
-            if (!isASelected && isBSelected) {
-                return 1;
-            }
+    //         if (!isASelected && isBSelected) {
+    //             return 1;
+    //         }
 
-            return a.localeCompare(b);
-        });
-    }, [selectedTags]);
+    //         return a.localeCompare(b);
+    //     });
+    // }, [selectedTags]);
 
     const validateFiles = (incomingFiles: FileList | null) => {
         if (!incomingFiles || incomingFiles.length === 0) {
@@ -109,14 +122,14 @@ export function CreateNewProject() {
         setFiles(selectedFiles);
     };
 
-    const toggleTag = (tag: ProjectTag) => {
-        setSelectedTags((currentTags) => {
-            if (currentTags.includes(tag)) {
-                return currentTags.filter((currentTag) => currentTag !== tag);
-            }
-            return [...currentTags, tag];
-        });
-    };
+    // const toggleTag = (tag: ProjectTag) => {
+    //     setSelectedTags((currentTags) => {
+    //         if (currentTags.includes(tag)) {
+    //             return currentTags.filter((currentTag) => currentTag !== tag);
+    //         }
+    //         return [...currentTags, tag];
+    //     });
+    // };
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -151,8 +164,8 @@ export function CreateNewProject() {
         const fd = new FormData();
         fd.append("title", trimmedTitle);
         fd.append("description", description || "");
-        fd.append("selectedTags", JSON.stringify(selectedTags));
-        fd.append("aiPersona", `${selectAiPersona}`);
+        // fd.append("selectedTags", JSON.stringify(selectedTags));
+        fd.append("projectCategory", `${projectCategory}`);
         fd.append("webSearch", `${isWebSearch}`);
 
         for (const file of Array.from(files)) {
@@ -179,8 +192,7 @@ export function CreateNewProject() {
             setTitle("");
             setDescription("");
             setFiles(null);
-            setSelectedTags([]);
-            setSelectAiPersona(AI_PERSONAS[0]);
+            setProjectCategory(projectCategories[0]);
             setIsWebSearch(true);
         } catch (err) {
             console.error(err);
@@ -288,7 +300,7 @@ export function CreateNewProject() {
                             )}
                         </Field>
 
-                        <Field>
+                        {/* <Field>
                             <Label>Project Tags</Label>
                             <div className="flex flex-wrap gap-2">
                                 {sortedTags.map((tag) => {
@@ -319,26 +331,26 @@ export function CreateNewProject() {
                             <p className="text-[10px] text-muted-foreground mt-1">
                                 Selected: {selectedTags.length}
                             </p>
-                        </Field>
+                        </Field> */}
 
                         <div className="grid grid-cols-2 gap-4 pt-2">
                             <Field>
-                                <Label>AI Persona</Label>
+                                <Label>Project Category</Label>
                                 <Select
                                     name="aiPersona"
-                                    defaultValue={AI_PERSONAS[0]}
+                                    defaultValue={projectCategories[0]}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select persona" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {AI_PERSONAS.map((persona) => {
+                                        {projectCategories.map((category) => {
                                             return (
                                                 <SelectItem
-                                                    key={persona}
-                                                    value={persona}
+                                                    key={category}
+                                                    value={category}
                                                 >
-                                                    {persona}
+                                                    {category}
                                                 </SelectItem>
                                             );
                                         })}
