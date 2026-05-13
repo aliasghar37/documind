@@ -24,6 +24,13 @@ enum MessageRole {
   AI
 }
 
+enum ProjectCategory {
+    GENERAL_PURPOSE             @map("General Purpose")
+    ACADEMIC_AND_EDUCATION      @map("Academic & Research")
+    PROFESSIONAL_AND_OFFICE     @map("Professional & Office")
+    MEDICAL_AND_HEALTH          @map("Medical & Health")
+}
+
 model User {
   id           String     @id @default(auto()) @map("_id") @db.ObjectId
   clerkUserId  String     @unique
@@ -42,8 +49,8 @@ model User {
 model Project {
   id              String      @id @default(auto()) @map("_id") @db.ObjectId
   title           String
-  metadata        Json?      
-  projectSettings Json?
+  projectSettings   Json?
+  projectCategory   ProjectCategory     @default(GENERAL_PURPOSE)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 

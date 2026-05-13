@@ -26,24 +26,13 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import handleUpdateProject from "@/app/actions/handleUpdateProject";
+import { ProjectCategoryType, projectCategories } from "@/lib/data";
 
 const MAX_FILES = 3;
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const MAX_TITLE_LENGTH = 50;
 const MAX_DESCRIPTION_LENGTH = 1500;
 
-type ProjectCategoryType =
-    | "General Purpose"
-    | "Academic & Education"
-    | "Professional & Office"
-    | "Medical & Healthcare";
-
-const projectCategories: ProjectCategoryType[] = [
-    "General Purpose",
-    "Academic & Education",
-    "Professional & Office",
-    "Medical & Healthcare",
-];
 export function UpdateProject({
     oldTitle,
     oldDescription,
@@ -61,9 +50,8 @@ export function UpdateProject({
     const [description, setDescription] = useState(oldDescription);
     const [files, setFiles] = useState<FileList | null>(oldDocuments);
     const [isWebSearch, setIsWebSearch] = useState(oldIsWebSearch);
-    const [projectCategory, setProjectCategory] = useState<ProjectCategoryType>(
-        projectCategories[0],
-    );
+    const [projectCategory, setProjectCategory] =
+        useState<ProjectCategoryType>(oldProjectCategory);
 
     const selectedFiles = useMemo(() => {
         return files ? Array.from(files) : [];
@@ -266,11 +254,11 @@ export function UpdateProject({
                             <Field>
                                 <Label>Project Category</Label>
                                 <Select
-                                    name="aiPersona"
+                                    name="projectCategory"
                                     defaultValue={projectCategories[0]}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select persona" />
+                                        <SelectValue placeholder="Select project category" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {projectCategories.map((category) => {

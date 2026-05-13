@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
     Dialog,
     DialogClose,
@@ -27,26 +26,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import handleCreateProject from "@/app/actions/handleCreateProject";
-// import {
-//     AI_PERSONAS,
-//     PROJECT_TAG_OPTIONS,
-//     type AiPersonaType,
-//     type ProjectTag,
-//     type ProjectTags,
-// } from "../projectConstants";
-
-type ProjectCategoryType =
-    | "General Purpose"
-    | "Academic & Education"
-    | "Professional & Office"
-    | "Medical & Healthcare";
-
-const projectCategories: ProjectCategoryType[] = [
-    "General Purpose",
-    "Academic & Education",
-    "Professional & Office",
-    "Medical & Healthcare",
-];
+import { ProjectCategoryType, projectCategories } from "@/lib/data";
 
 const MAX_FILES = 3;
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -56,7 +36,6 @@ const MAX_DESCRIPTION_LENGTH = 1500;
 export function CreateNewProject() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    // const [selectedTags, setSelectedTags] = useState<ProjectTags>([]);
     const [files, setFiles] = useState<FileList | null>(null);
     const [isWebSearch, setIsWebSearch] = useState(true);
     const [projectCategory, setProjectCategory] = useState<ProjectCategoryType>(
@@ -66,23 +45,6 @@ export function CreateNewProject() {
     const selectedFiles = useMemo(() => {
         return files ? Array.from(files) : [];
     }, [files]);
-
-    // const sortedTags = useMemo(() => {
-    //     return [...PROJECT_TAG_OPTIONS].sort((a, b) => {
-    //         const isASelected = selectedTags.includes(a);
-    //         const isBSelected = selectedTags.includes(b);
-
-    //         if (isASelected && !isBSelected) {
-    //             return -1;
-    //         }
-
-    //         if (!isASelected && isBSelected) {
-    //             return 1;
-    //         }
-
-    //         return a.localeCompare(b);
-    //     });
-    // }, [selectedTags]);
 
     const validateFiles = (incomingFiles: FileList | null) => {
         if (!incomingFiles || incomingFiles.length === 0) {
@@ -122,15 +84,6 @@ export function CreateNewProject() {
         setFiles(selectedFiles);
     };
 
-    // const toggleTag = (tag: ProjectTag) => {
-    //     setSelectedTags((currentTags) => {
-    //         if (currentTags.includes(tag)) {
-    //             return currentTags.filter((currentTag) => currentTag !== tag);
-    //         }
-    //         return [...currentTags, tag];
-    //     });
-    // };
-
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -164,7 +117,6 @@ export function CreateNewProject() {
         const fd = new FormData();
         fd.append("title", trimmedTitle);
         fd.append("description", description || "");
-        // fd.append("selectedTags", JSON.stringify(selectedTags));
         fd.append("projectCategory", `${projectCategory}`);
         fd.append("webSearch", `${isWebSearch}`);
 
@@ -300,48 +252,15 @@ export function CreateNewProject() {
                             )}
                         </Field>
 
-                        {/* <Field>
-                            <Label>Project Tags</Label>
-                            <div className="flex flex-wrap gap-2">
-                                {sortedTags.map((tag) => {
-                                    const isSelected =
-                                        selectedTags.includes(tag);
-
-                                    return (
-                                        <button
-                                            key={tag}
-                                            type="button"
-                                            onClick={() => toggleTag(tag)}
-                                            className="rounded-md"
-                                        >
-                                            <Badge
-                                                variant={
-                                                    isSelected
-                                                        ? "default"
-                                                        : "outline"
-                                                }
-                                                className="h-7 px-3 text-xs"
-                                            >
-                                                {tag}
-                                            </Badge>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                            <p className="text-[10px] text-muted-foreground mt-1">
-                                Selected: {selectedTags.length}
-                            </p>
-                        </Field> */}
-
                         <div className="grid grid-cols-2 gap-4 pt-2">
                             <Field>
                                 <Label>Project Category</Label>
                                 <Select
-                                    name="aiPersona"
+                                    name="projectCategory"
                                     defaultValue={projectCategories[0]}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select persona" />
+                                        <SelectValue placeholder="Select Project Category" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {projectCategories.map((category) => {

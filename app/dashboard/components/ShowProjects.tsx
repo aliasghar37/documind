@@ -10,7 +10,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { type Project, type Document } from "../page";
 import Link from "next/link";
 import { CreateNewProject } from "./NewProject";
@@ -44,6 +44,10 @@ export default function ShowProjects({
     const [projects, setProjects] = useState<Project[]>(
         initialProjects as Project[],
     );
+    const [badgeIndex, setBadgeIndex] = useState(0);
+    useEffect(() => {
+        setBadgeIndex(Math.floor(Math.random() * badgePalette.length));
+    }, []);
 
     const metricesData = useMemo(() => {
         return [
@@ -150,11 +154,7 @@ export default function ShowProjects({
                                 <div className="mt-2 flex flex-wrap gap-1">
                                     <Badge
                                         key={`General Purpose`}
-                                        className={
-                                            badgePalette[
-                                                Math.floor(Math.random() * 6)
-                                            ]
-                                        }
+                                        className={badgePalette[badgeIndex]}
                                     >
                                         General Purpose
                                     </Badge>

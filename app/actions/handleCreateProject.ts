@@ -4,13 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
-// import {
-//     AI_PERSONAS,
-//     PROJECT_TAG_OPTIONS,
-//     type AiPersonaType,
-//     type ProjectTag,
-//     type ProjectTags,
-// } from "../dashboard/projectConstants";
+import type { ProjectCategory } from "@/generated/prisma/enums";
 
 const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET;
 
@@ -62,33 +56,19 @@ export async function handleCreateProject(
 
     const title = (formData.get("title") as string) || "";
     const description = (formData.get("description") as string) || "";
-    const selectedTagsRaw = formData.get("selectedTags") as string | null;
     const webSearchRaw = formData.get("webSearch") as string | null;
     const webSearch = webSearchRaw === "true";
-    const aiPersona = formData.get("aiPersona") as string;
+    const projectCategoryRaw =
+        (formData.get("projectCategory") as string) || "General Purpose";
 
-    // if (!aiPersona || !AI_PERSONAS.includes(aiPersona as AiPersonaType))
-    //     return { success: false, message: "Only select allowed AI personas" };
-
-    // let selectedTags: ProjectTags = ["Others"];
-    // try {
-    //     if (selectedTagsRaw) {
-    //         const parsed = JSON.parse(selectedTagsRaw);
-    //         if (Array.isArray(parsed)) {
-    //             const validTags = parsed.filter(
-    //                 (tag): tag is ProjectTag =>
-    //                     typeof tag === "string" &&
-    //                     PROJECT_TAG_OPTIONS.includes(tag as ProjectTag),
-    //             );
-
-    //             if (validTags.length > 0) {
-    //                 selectedTags = validTags;
-    //             }
-    //         }
-    //     }
-    // } catch (e) {
-    //     selectedTags = ["Others"];
-    // }
+    const CATEGORY_MAP: Record<string, string> = {
+        "General Purpose": "GENERAL_PURPOSE",
+        "Academic & Education": "ACADEMIC_AND_EDUCATION",
+        "Professional & Office": "PROFESSIONAL_AND_OFFICE",
+        "Medical & Healthcare": "MEDICAL_AND_HEALTH",
+    };
+    const projectCategory = (CATEGORY_MAP[projectCategoryRaw] ??
+        "GENERAL_PURPOSE") as ProjectCategory;
 
     if (
         typeof title !== "string" ||
@@ -179,10 +159,9 @@ export async function handleCreateProject(
         const project = await prisma.project.create({
             data: {
                 title: title.trim(),
-                // metadata: { tags: selectedTags },
+                projectCategory,
                 projectSettings: {
                     webSearch,
-                    aiPersona,
                 },
                 userId: dbUser.id,
                 documents: {
