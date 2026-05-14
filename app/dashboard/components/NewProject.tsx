@@ -41,6 +41,7 @@ export function CreateNewProject() {
     const [projectCategory, setProjectCategory] = useState<ProjectCategoryType>(
         projectCategories[0],
     );
+    const [openDialog, setOpenDialog] = useState(false);
 
     const selectedFiles = useMemo(() => {
         return files ? Array.from(files) : [];
@@ -146,6 +147,7 @@ export function CreateNewProject() {
             setFiles(null);
             setProjectCategory(projectCategories[0]);
             setIsWebSearch(true);
+            setOpenDialog(false);
         } catch (err) {
             console.error(err);
             toast.dismiss(loadingToastId);
@@ -156,7 +158,7 @@ export function CreateNewProject() {
     };
 
     return (
-        <Dialog>
+        <Dialog open={openDialog} onOpenChange={setOpenDialog}>
             <DialogTrigger asChild>
                 <Button size="lg" className="gap-2">
                     <svg
@@ -257,7 +259,12 @@ export function CreateNewProject() {
                                 <Label>Project Category</Label>
                                 <Select
                                     name="projectCategory"
-                                    defaultValue={projectCategories[0]}
+                                    value={projectCategory}
+                                    onValueChange={(val) =>
+                                        setProjectCategory(
+                                            val as ProjectCategoryType,
+                                        )
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select Project Category" />
@@ -283,10 +290,8 @@ export function CreateNewProject() {
                                     <Switch
                                         id="web-search"
                                         name="webSearchEnabled"
-                                        defaultChecked={isWebSearch}
-                                        onClick={(prev) =>
-                                            setIsWebSearch(!prev)
-                                        }
+                                        checked={isWebSearch}
+                                        onCheckedChange={setIsWebSearch}
                                     />
                                     <span className="text-xs text-muted-foreground">
                                         Tavily API

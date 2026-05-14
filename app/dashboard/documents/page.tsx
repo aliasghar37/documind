@@ -14,10 +14,7 @@ export default async function DashboardDocumentsPage() {
 
     return (
         <div className="flex flex-col gap-12">
-            <ShowDocuments
-                recentDocuments={data.documents}
-                page="documents"
-            />
+            <ShowDocuments recentDocuments={data.documents} page="documents" />
         </div>
     );
 }

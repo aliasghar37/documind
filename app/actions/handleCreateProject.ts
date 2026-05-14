@@ -159,6 +159,7 @@ export async function handleCreateProject(
         const project = await prisma.project.create({
             data: {
                 title: title.trim(),
+                description,
                 projectCategory,
                 projectSettings: {
                     webSearch,

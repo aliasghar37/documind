@@ -1,7 +1,8 @@
 import ShowProjects from "./components/ShowProjects";
 import ShowDocuments from "./components/ShowDocuments";
-import type { Prisma } from "@prisma/client";
 import { getDashboardData } from "./data";
+import { JsonValue } from "@prisma/client/runtime/binary";
+import { ProjectCategory } from "@/generated/prisma/enums";
 
 export type Project = {
     id: string;
@@ -10,8 +11,8 @@ export type Project = {
     userId: string;
     title: string;
     description?: string;
-    metadata: Prisma.JsonValue;
-    projectSettings: { webSearch: boolean };
+    projectSettings: JsonValue;
+    projectCategory: ProjectCategory;
 };
 
 export type Document = {

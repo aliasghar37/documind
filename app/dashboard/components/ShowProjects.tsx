@@ -67,6 +67,16 @@ export default function ShowProjects({
         }));
     }, [projects, documents]);
 
+    const projectSettings = (project: any) => {
+        try {
+            return typeof project.projectSettings === "string"
+                ? JSON.parse(project.projectSettings)
+                : {};
+        } catch (e) {
+            return {};
+        }
+    };
+
     return (
         <>
             {page === "overview" ? (
@@ -178,11 +188,16 @@ export default function ShowProjects({
                                 Open Project
                             </Button>
                             <UpdateProject
+                                projectId={project.id}
                                 oldTitle={project.title}
                                 oldDescription={project.description ?? null}
-                                oldDocuments={null}
+                                oldDocuments={
+                                    documents?.filter(
+                                        (doc) => doc.projectId === project.id,
+                                    ) ?? null
+                                }
                                 oldIsWebSearch={Boolean(
-                                    project.projectSettings.webSearch,
+                                    projectSettings(project).webSearch,
                                 )}
                                 oldProjectCategory="General Purpose"
                             />
