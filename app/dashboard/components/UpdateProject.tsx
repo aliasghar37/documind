@@ -26,10 +26,8 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import {
-    handleUpdateProject,
-    handleDeleteProject,
-} from "@/app/actions/handleUpdateProject";
+import { handleUpdateProject } from "@/app/actions/handleUpdateProject";
+import { handleDeleteProject } from "@/app/actions/handleDeleteProject";
 import { ProjectCategoryType, projectCategories } from "@/lib/data";
 
 const MAX_FILES = 3;
