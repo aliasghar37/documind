@@ -84,6 +84,7 @@ export async function handleCreateProject(
         return { success: false, message: "Description is too long." };
     }
     const files = formData.getAll("docs") as File[];
+    const documentCount = files.length;
     if (!files || files.length === 0) {
         return { success: false, message: "Please upload at least one PDF." };
     }
@@ -156,27 +157,41 @@ export async function handleCreateProject(
     }
 
     try {
-        const project = await prisma.project.create({
+        const user = await prisma.user.update({
+            where: { id: dbUser.id },
             data: {
-                title: title.trim(),
-                description,
-                projectCategory,
-                projectSettings: {
-                    webSearch,
+                projectsCount: { increment: 1 },
+                documentsCount: { increment: documentCount },
+
+                projects: {
+                    create: {
+                        title: title.trim(),
+                        description,
+                        projectCategory,
+                        projectSettings: {
+                            webSearch,
+                        },
+                        documentCount,
+                        documents: {
+                            create: uploadedFiles.map((f) => ({
+                                fileUrl: f.url,
+                                fileName: f.name,
+                                fileType: f.type || "application/pdf",
+                                pages: 0,
+                                userId: dbUser.id,
+                            })),
+                        },
+                    },
                 },
-                userId: dbUser.id,
-                documents: {
-                    create: uploadedFiles.map((f) => ({
-                        fileUrl: f.url,
-                        fileName: f.name,
-                        fileType: f.type || "application/pdf",
-                        pages: 0,
-                        userId: dbUser.id,
-                    })),
+            },
+            include: {
+                projects: {
+                    take: 1,
+                    orderBy: { id: "desc" },
                 },
             },
         });
-
+        const project = user.projects[0];
         return { success: true, projectId: project.id };
     } catch (e) {
         console.error("Prisma create error:", e);

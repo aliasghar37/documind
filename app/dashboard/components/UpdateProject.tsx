@@ -195,6 +195,7 @@ export function UpdateProject({
             toast.error(res.message);
             return;
         }
+        setOpenDelete(false);
         toast.success(res.message);
     };
 

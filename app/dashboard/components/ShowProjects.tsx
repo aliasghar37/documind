@@ -52,8 +52,8 @@ export default function ShowProjects({
     const metricesData = useMemo(() => {
         return [
             { title: 4885, description: "Token Usage" },
-            { title: totalProjects, description: "Projects Created" },
-            { title: totalDocuments, description: "Documents Uploaded" },
+            { title: totalProjects, description: "Total Projects" },
+            { title: totalDocuments, description: "Total Documents" },
             { title: "Free", description: "User Type" },
         ];
     }, [projects]);

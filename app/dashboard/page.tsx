@@ -9,6 +9,7 @@ export type Project = {
     createdAt: Date;
     updatedAt: Date;
     userId: string;
+    documentCount: number;
     title: string;
     description?: string;
     projectSettings: JsonValue;
@@ -67,8 +68,7 @@ export default async function DashboardOverview() {
         );
     }
 
-    const projects = data.projects;
-    const documents = data.documents;
+    const { projects, projectsCount, documents, documentsCount } = data;
 
     const visibleProjects =
         projects.length > 3 ? projects.slice(0, 3) : projects;
@@ -81,8 +81,8 @@ export default async function DashboardOverview() {
                 page="overview"
                 projects={visibleProjects}
                 documents={visibleDocuments}
-                totalDocuments={documents.length}
-                totalProjects={projects.length}
+                totalDocuments={documentsCount}
+                totalProjects={projectsCount}
             />
             <ShowDocuments
                 recentDocuments={visibleDocuments}

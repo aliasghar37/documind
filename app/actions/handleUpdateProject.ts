@@ -98,7 +98,7 @@ export async function handleUpdateProject(
         return { success: false, message: "Description is too long." };
 
     const files = formData.getAll("docs") as File[];
-    const existingDocumentCount = project.documents.length;
+    const existingDocumentCount = project.documentCount;
     if ((!files || files.length === 0) && existingDocumentCount === 0)
         return { success: false, message: "Please upload at least one PDF." };
     if (files.length > 3)
@@ -131,6 +131,7 @@ export async function handleUpdateProject(
             };
         }
     }
+    const documentCount = project.documentCount + files.length;
 
     const uploadedFiles: {
         path: string;
@@ -180,29 +181,40 @@ export async function handleUpdateProject(
     }
 
     try {
-        const updatedProject = await prisma.project.update({
-            where: { id: projectId },
-            data: {
-                title: title.trim(),
-                description,
-                projectCategory,
-                projectSettings: {
-                    ...(typeof project.projectSettings === "object" &&
-                    project.projectSettings
-                        ? project.projectSettings
-                        : {}),
-                    webSearch,
+        const updatedProject = await prisma.$transaction(async (tx) => {
+            await tx.user.update({
+                where: { id: dbUser.id },
+                data: {
+                    documentsCount: {
+                        increment: files.length,
+                    },
                 },
-                documents: {
-                    create: uploadedFiles.map((f) => ({
-                        fileUrl: f.url,
-                        fileName: f.name,
-                        fileType: f.type || "application/pdf",
-                        pages: 0,
-                        userId: dbUser.id,
-                    })),
+            });
+            return tx.project.update({
+                where: { id: projectId },
+                data: {
+                    title: title.trim(),
+                    description,
+                    documentCount,
+                    projectCategory,
+                    projectSettings: {
+                        ...(typeof project.projectSettings === "object" &&
+                        project.projectSettings
+                            ? project.projectSettings
+                            : {}),
+                        webSearch,
+                    },
+                    documents: {
+                        create: uploadedFiles.map((f) => ({
+                            fileUrl: f.url,
+                            fileName: f.name,
+                            fileType: f.type || "application/pdf",
+                            pages: 0,
+                            userId: dbUser.id,
+                        })),
+                    },
                 },
-            },
+            });
         });
 
         return { success: true, projectId: updatedProject.id };
