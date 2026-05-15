@@ -136,3 +136,27 @@
         @apply font-sans;
     }
 }
+
+.chat-scrollbar {
+    scrollbar-width:auto;
+    scrollbar-color: var(--muted-foreground) var(--muted);
+}
+
+.chat-scrollbar::-webkit-scrollbar {
+    width: 10px;
+}
+
+.chat-scrollbar::-webkit-scrollbar-track {
+    background: var(--muted);
+    border-radius: 9999px;
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 9999px;
+    border: 2px solid var(--muted);
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+}
