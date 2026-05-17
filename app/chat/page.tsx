@@ -60,7 +60,7 @@ export default function CustomViewer() {
                 },
             },
             theme: {
-                preference: "system" as const,
+                preference: "light" as const,
                 light: {
                     accent: {
                         primary: "#476e66",
@@ -151,7 +151,7 @@ export default function CustomViewer() {
             toolbars: { "main-toolbar": { ...toolbar, items } },
         });
 
-        // Best-effort: remove only rotation-related entries from page settings/menu
+        // remove only rotation-related entries
         try {
             const full = ui.getSchema();
 
@@ -189,7 +189,6 @@ export default function CustomViewer() {
                 }
             }
 
-            // Some schemas include top-level menus or dropdown definitions - try to sanitize them too
             if (clone.menus) {
                 for (const key of Object.keys(clone.menus)) {
                     const menu = clone.menus[key];
