@@ -13,9 +13,7 @@ export default function DocumentsLoading() {
     return (
         <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                    <Skeleton className="h-10 w-48" />
-                </div>
+                <Skeleton className="h-10 w-48" />
             </div>
 
             <Card>
@@ -41,7 +39,7 @@ export default function DocumentsLoading() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {Array.from({ length: 5 }).map((_, index) => (
+                            {Array.from({ length: 20 }).map((_, index) => (
                                 <TableRow key={`doc-skeleton-${index}`}>
                                     <TableCell>
                                         <Skeleton className="h-4 w-32" />

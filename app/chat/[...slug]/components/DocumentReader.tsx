@@ -6,43 +6,39 @@ import {
     type PDFViewerRef,
 } from "@embedpdf/react-pdf-viewer";
 import { useMemo, useRef, useState } from "react";
-import { ChatInterface } from "./components/ChatInterface";
+import { ChatInterface } from "./ChatInterface";
+import { ProjectWithDocuments } from "@/lib/data";
 
-type DocumentOption = {
+type Document = {
     id: string;
-    label: string;
-    src: string;
+    createdAt: Date;
+    updatedAt: Date;
+    userId: string;
+    fileUrl: string;
+    fileName: string;
+    fileType: string;
+    pages: number;
+    projectId: string;
+    projectName: string;
 };
 
-const DOCUMENTS: DocumentOption[] = [
-    {
-        id: "doc-1",
-        label: "Sample Document One",
-        src: "/doc-1.pdf",
-    },
-    {
-        id: "doc-2",
-        label: "Sample Document Two",
-        src: "/doc-2.pdf",
-    },
-    {
-        id: "doc-3",
-        label: "Sample Document Three",
-        src: "/doc-3.pdf",
-    },
-];
+export default function CustomViewer({
+    project,
+}: {
+    project: ProjectWithDocuments;
+}) {
+    const documents = project.documents;
 
-export default function CustomViewer() {
     const viewerRef = useRef<PDFViewerRef>(null);
-    const [selectedDocument, setSelectedDocument] = useState<DocumentOption>(
-        DOCUMENTS[0],
+    const [selectedDocument, setSelectedDocument] = useState<Document>(
+        documents[0],
     );
     const [documentMenuOpen, setDocumentMenuOpen] = useState(false);
     const registeredRegistryRef = useRef<unknown>(null);
 
     const viewerConfig = useMemo(
         () => ({
-            src: selectedDocument.src,
+            src: selectedDocument.fileUrl,
             disabledCategories: [
                 "document-open",
                 "document-close",
@@ -105,7 +101,7 @@ export default function CustomViewer() {
             },
             tabBar: "never" as const,
         }),
-        [selectedDocument.src],
+        [selectedDocument.fileUrl],
     );
 
     const handleReady = async () => {
@@ -213,7 +209,7 @@ export default function CustomViewer() {
                     config={viewerConfig}
                     className="h-full w-full"
                     style={{ height: "100%", width: "100%" }}
-                    key={selectedDocument.src}
+                    key={selectedDocument.fileUrl}
                 />
 
                 {documentMenuOpen ? (
@@ -222,7 +218,7 @@ export default function CustomViewer() {
                             Open a document
                         </div>
                         <div className="space-y-1">
-                            {DOCUMENTS.map((document) => (
+                            {documents.map((document) => (
                                 <button
                                     key={document.id}
                                     type="button"
@@ -232,10 +228,10 @@ export default function CustomViewer() {
                                         setDocumentMenuOpen(false);
                                     }}
                                 >
-                                    <span>{document.label}</span>
+                                    <span>{document.fileName}</span>
                                     {selectedDocument.id === document.id ? (
                                         <span className="text-xs font-medium text-primary">
-                                            Open
+                                            Opened
                                         </span>
                                     ) : null}
                                 </button>

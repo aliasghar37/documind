@@ -181,12 +181,8 @@ export default function ShowProjects({
                         </CardContent>
 
                         <CardFooter className="mt-auto flex justify-center gap-2 bg-card">
-                            <Button
-                                variant="outline"
-                                size="default"
-                                className="w-1/2 bg-primary text-background"
-                            >
-                                Open Project
+                            <Button asChild variant="outline" size="default" className="w-1/2 bg-primary text-background">
+                                <Link href={`/chat/${project.id}`}>Open Project</Link>
                             </Button>
                             <UpdateProject
                                 projectId={project.id}
