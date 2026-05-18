@@ -5,9 +5,10 @@ import {
     ZoomMode,
     type PDFViewerRef,
 } from "@embedpdf/react-pdf-viewer";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChatInterface } from "./ChatInterface";
 import { ProjectWithDocuments } from "@/lib/data";
+import { useProjectHeader } from "@/components/project-header-context";
 
 type Document = {
     id: string;
@@ -28,6 +29,7 @@ export default function CustomViewer({
     project: ProjectWithDocuments;
 }) {
     const documents = project.documents;
+    const { setProjectTitle } = useProjectHeader();
 
     const viewerRef = useRef<PDFViewerRef>(null);
     const [selectedDocument, setSelectedDocument] = useState<Document>(
@@ -35,6 +37,14 @@ export default function CustomViewer({
     );
     const [documentMenuOpen, setDocumentMenuOpen] = useState(false);
     const registeredRegistryRef = useRef<unknown>(null);
+
+    useEffect(() => {
+        setProjectTitle(project.title);
+
+        return () => {
+            setProjectTitle(null);
+        };
+    }, [project.title, setProjectTitle]);
 
     const viewerConfig = useMemo(
         () => ({

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useProjectHeader } from "@/components/project-header-context";
 import {
     NavigationMenu,
     NavigationMenuItem,
@@ -22,12 +23,14 @@ const navLinks = [
 
 export function TopNavbar() {
     const pathname = usePathname();
+    const isChatPage = pathname.startsWith("/chat");
     const isDashboard = pathname.startsWith("/dashboard");
     const { isSignedIn } = useUser();
+    const { projectTitle } = useProjectHeader();
 
     return (
         <header className="sticky top-0 z-40 w-full self-center border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
-            <div className="mx-auto flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-8">
+            <div className="relative mx-auto flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-8">
                 <Link
                     href="/"
                     className="inline-flex items-center gap-2"
@@ -48,29 +51,40 @@ export function TopNavbar() {
                     </span>
                 </Link>
 
-                {!isDashboard && (
-                    <NavigationMenu className="hidden md:flex">
-                        <NavigationMenuList>
-                            {navLinks.map((link) => (
-                                <NavigationMenuItem key={link.href}>
-                                    <NavigationMenuLink
-                                        asChild
-                                        className={cn(
-                                            navigationMenuTriggerStyle(),
-                                            "text-base",
-                                            pathname === link.href &&
-                                                "bg-muted text-foreground",
-                                        )}
-                                    >
-                                        <Link href={link.href}>
-                                            {link.label}
-                                        </Link>
-                                    </NavigationMenuLink>
-                                </NavigationMenuItem>
-                            ))}
-                        </NavigationMenuList>
-                    </NavigationMenu>
+                {isChatPage && projectTitle ? (
+                    <div className="pointer-events-none absolute inset-x-0 flex justify-center px-20">
+                        <span className="max-w-[min(70vw,42rem)] truncate text-base font-semibold text-foreground sm:text-lg">
+                            Project: {projectTitle}
+                        </span>
+                    </div>
+                ) : (
+                    <div>
+                        {!isDashboard && (
+                            <NavigationMenu className="hidden md:flex">
+                                <NavigationMenuList>
+                                    {navLinks.map((link) => (
+                                        <NavigationMenuItem key={link.href}>
+                                            <NavigationMenuLink
+                                                asChild
+                                                className={cn(
+                                                    navigationMenuTriggerStyle(),
+                                                    "text-base",
+                                                    pathname === link.href &&
+                                                        "bg-muted text-foreground",
+                                                )}
+                                            >
+                                                <Link href={link.href}>
+                                                    {link.label}
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        </NavigationMenuItem>
+                                    ))}
+                                </NavigationMenuList>
+                            </NavigationMenu>
+                        )}
+                    </div>
                 )}
+
                 {!isDashboard && (
                     <div className="flex items-center gap-2">
                         {!isSignedIn ? (
@@ -91,10 +105,7 @@ export function TopNavbar() {
                             </>
                         ) : (
                             <>
-                                <Button
-                                    asChild
-                                    className="bg-primary"
-                                >
+                                <Button asChild className="bg-primary">
                                     <Link href="/dashboard">Dashboard</Link>
                                 </Button>
                                 <UserButton />

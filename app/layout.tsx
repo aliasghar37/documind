@@ -4,6 +4,7 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { TopNavbar } from "@/components/top-navbar";
 import { Toaster } from "sonner";
+import { ProjectHeaderProvider } from "@/components/project-header-context";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -32,9 +33,11 @@ export default function RootLayout({
         >
             <body className="min-h-full flex flex-col">
                 <ClerkProvider>
-                    <TopNavbar />
-                    {children}
-                    <Toaster richColors position="top-right" />
+                    <ProjectHeaderProvider>
+                        <TopNavbar />
+                        {children}
+                        <Toaster richColors position="top-right" />
+                    </ProjectHeaderProvider>
                 </ClerkProvider>
             </body>
         </html>

@@ -16,6 +16,20 @@ import Link from "next/link";
 import { CreateNewProject } from "./NewProject";
 import { formatDate } from "@/lib/dateFormatter";
 import { UpdateProject } from "./UpdateProject";
+import type { ProjectCategoryType } from "@/lib/data";
+
+const getProjectCategoryLabel = (
+    projectCategoryRaw: string,
+): ProjectCategoryType => {
+    const CATEGORY_MAP: Record<string, ProjectCategoryType> = {
+        GENERAL_PURPOSE: "General Purpose",
+        ACADEMIC_AND_EDUCATION: "Academic & Education",
+        PROFESSIONAL_AND_OFFICE: "Professional & Office",
+        MEDICAL_AND_HEALTH: "Medical & Healthcare",
+    };
+
+    return CATEGORY_MAP[projectCategoryRaw] ?? "General Purpose";
+};
 
 const badgePalette = [
     "bg-emerald-100 text-emerald-800 border-emerald-200",
@@ -75,6 +89,14 @@ export default function ShowProjects({
             return {};
         }
     };
+
+    const CATEGORY_MAP: Record<string, string> = {
+        "General Purpose": "GENERAL_PURPOSE",
+        "Academic & Education": "ACADEMIC_AND_EDUCATION",
+        "Professional & Office": "PROFESSIONAL_AND_OFFICE",
+        "Medical & Healthcare": "MEDICAL_AND_HEALTH",
+    };
+    // const projectCategory = getProjectCategory();
 
     return (
         <>
@@ -181,8 +203,15 @@ export default function ShowProjects({
                         </CardContent>
 
                         <CardFooter className="mt-auto flex justify-center gap-2 bg-card">
-                            <Button asChild variant="outline" size="default" className="w-1/2 bg-primary text-background">
-                                <Link href={`/chat/${project.id}`}>Open Project</Link>
+                            <Button
+                                asChild
+                                variant="outline"
+                                size="default"
+                                className="w-1/2 bg-primary text-background"
+                            >
+                                <Link href={`/chat/${project.id}`}>
+                                    Open Project
+                                </Link>
                             </Button>
                             <UpdateProject
                                 projectId={project.id}
@@ -196,7 +225,9 @@ export default function ShowProjects({
                                 oldIsWebSearch={Boolean(
                                     projectSettings(project).webSearch,
                                 )}
-                                oldProjectCategory="General Purpose"
+                                oldProjectCategory={getProjectCategoryLabel(
+                                    project.projectCategory,
+                                )}
                             />
                         </CardFooter>
                     </Card>

@@ -9,11 +9,12 @@ import {
     Send,
     ThumbsDown,
     ThumbsUp,
-    Volume2,
     Globe,
+    ChevronDown,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import TextToSpeech from "./TextToSpeech";
 
 type ChatMessage = {
     id: number;
@@ -24,7 +25,7 @@ type ChatMessage = {
 const generateAssistantReply = (prompt: string) => {
     const cleanPrompt = prompt.replace(/\s+/g, " ").trim();
 
-    return `I can help with "${cleanPrompt}". A good next step is to break the request into the main goal, any constraints, and the expected output. If you want, I can also turn this into a short implementation plan or a checklist.`;
+    return `I can help with "${cleanPrompt}". A good next step is to break the request into the main goal, any constraints, and the expected output. If you want, I can also turn this into a short implementation plan or a checklist. projectConstants with "${cleanPrompt}". A good next step is to break the request into the main goal, any constraints, and the expected output. If you want, I can also turn this into a short implementation plan or a checklist. projectConstants with "${cleanPrompt}". A good next step is to break the request into the main goal, any constraints, and the expected output. If you want, I can also turn this into a short implementation plan or a checklist. projectConstants with "${cleanPrompt}". A good next step is to break the request into the main goal, any constraints, and the expected output. If you want, I can also turn this into a short implementation plan or a checklist. projectConstants with "${cleanPrompt}". A good next step is to break the request into the main goal, any constraints, and the expected output. If you want, I can also turn this into a short implementation plan or a checklist. projectConstants with "${cleanPrompt}". A good next step is to break the request into the main goal, any constraints, and the expected output. If you want, I can also turn this into a short implementation plan or a checklist.`;
 };
 
 export function ChatInterface() {
@@ -37,7 +38,7 @@ export function ChatInterface() {
     const copyMessage = async (content: string) => {
         if (navigator.clipboard?.writeText) {
             await navigator.clipboard.writeText(content);
-            toast.success("Message has been copied")
+            toast.success("Message has been copied");
         }
     };
 
@@ -171,14 +172,15 @@ export function ChatInterface() {
                                         >
                                             <Copy className="size-4" />
                                         </Button>
+                                        <TextToSpeech text={message.content} />
                                         <Button
                                             type="button"
                                             variant="ghost"
                                             size="icon"
                                             className="size-8 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-                                            aria-label="Listen to response"
+                                            aria-label="Show references"
                                         >
-                                            <Volume2 className="size-4" />
+                                            <ChevronDown className="size-4" />
                                         </Button>
                                     </div>
                                 </div>
