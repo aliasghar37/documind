@@ -93,7 +93,7 @@ export function TopNavbar() {
                             <>
                                 <Button
                                     asChild
-                                    className="bg-linear-to-t from-primary to-indigo-700"
+                                    className="bg-primary"
                                 >
                                     <Link href="/dashboard">Dashboard</Link>
                                 </Button>

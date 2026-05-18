@@ -33,9 +33,11 @@ export default function ShowDocuments({
                     </div>
 
                     <Button asChild variant="secondary" size="lg">
-                        <Link href="/dashboard/documents">
-                            Show all documents
-                        </Link>
+                        {page === "overview" && (
+                            <Link href="/dashboard/documents">
+                                Show all documents
+                            </Link>
+                        )}
                     </Button>
                 </div>
 
@@ -65,7 +67,7 @@ export default function ShowDocuments({
                                             {doc.fileName}
                                         </TableCell>
                                         <TableCell className="text-base">
-                                            {doc.projectId}
+                                            {doc.projectName}
                                         </TableCell>
                                         <TableCell className="text-base">
                                             {formatDate(doc.updatedAt)}

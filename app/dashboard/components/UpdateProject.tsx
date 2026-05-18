@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { type Document } from "../page";
 import { Button } from "@/components/ui/button";
 import {
@@ -62,6 +63,7 @@ export function UpdateProject({
     const [openUpdate, setOpenUpdate] = useState(false);
     const [openDelete, setOpenDelete] = useState(false);
     const [pendingDeleteOpen, setPendingDeleteOpen] = useState(false);
+    const router = useRouter();
 
     const selectedFiles = useMemo(() => {
         return files ? Array.from(files) : [];
@@ -160,6 +162,8 @@ export function UpdateProject({
             toast.dismiss(loadingToastId);
             toast.success("Project updated successfully.");
 
+            router.refresh();
+
             setOpenUpdate(false);
             setTitle("");
             setDescription("");
@@ -197,6 +201,7 @@ export function UpdateProject({
         }
         setOpenDelete(false);
         toast.success(res.message);
+        router.refresh();
     };
 
     return (

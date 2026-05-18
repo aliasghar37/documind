@@ -41,13 +41,12 @@ export default function ShowProjects({
     totalDocuments?: number;
     totalProjects?: number;
 }) {
-    const [projects, setProjects] = useState<Project[]>(
-        initialProjects as Project[],
-    );
     const [badgeIndex, setBadgeIndex] = useState(0);
     useEffect(() => {
         setBadgeIndex(Math.floor(Math.random() * badgePalette.length));
     }, []);
+
+    const projects = initialProjects ?? [];
 
     const metricesData = useMemo(() => {
         return [
@@ -56,7 +55,7 @@ export default function ShowProjects({
             { title: totalDocuments, description: "Total Documents" },
             { title: "Free", description: "User Type" },
         ];
-    }, [projects]);
+    }, [totalDocuments, totalProjects]);
 
     const projectsWithDocCounts = useMemo(() => {
         return projects.map((project) => ({
@@ -112,9 +111,11 @@ export default function ShowProjects({
                 </div>
                 <div className="flex justify-center items-center gap-2">
                     <Button asChild variant="secondary" size="lg">
-                        <Link href="/dashboard/documents">
-                            Show all projects
-                        </Link>
+                        {page === "overview" && (
+                            <Link href="/dashboard/documents">
+                                Show all projects
+                            </Link>
+                        )}
                     </Button>
                     <CreateNewProject />
                 </div>

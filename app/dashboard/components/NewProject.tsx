@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -42,6 +43,7 @@ export function CreateNewProject() {
         projectCategories[0],
     );
     const [openDialog, setOpenDialog] = useState(false);
+    const router = useRouter();
 
     const selectedFiles = useMemo(() => {
         return files ? Array.from(files) : [];
@@ -141,6 +143,8 @@ export function CreateNewProject() {
 
             toast.dismiss(loadingToastId);
             toast.success("Project created successfully.");
+
+            router.refresh();
 
             setTitle("");
             setDescription("");

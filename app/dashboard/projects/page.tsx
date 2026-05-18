@@ -16,8 +16,10 @@ export default async function DashboardProjectsPage() {
         <div className="flex flex-col gap-12">
             <ShowProjects
                 projects={data.projects}
-                // documents={data.documents}
+                documents={data.documents}
                 page="projects"
+                totalDocuments={data.documentsCount}
+                totalProjects={data.projectsCount}
             />
         </div>
     );

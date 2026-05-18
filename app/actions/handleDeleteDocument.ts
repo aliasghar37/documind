@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
+import { revalidatePath } from "next/cache";
 
 function isValidObjectId(id: string) {
     return /^[a-fA-F0-9]{24}$/.test(id);
@@ -59,5 +60,7 @@ export async function handleDeleteDocument(documentId: string) {
         where: { id: documentId },
     });
 
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/documents");
     return { success: true, message: "Document has been deleted permanently" };
 }

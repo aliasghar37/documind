@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
+import { revalidatePath } from "next/cache";
 
 const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET;
 
@@ -70,5 +71,8 @@ export async function handleDeleteProject(projectId: string) {
             id: project.id,
         },
     });
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/projects");
+    revalidatePath("/dashboard/documents");
     return { success: true, message: "Project has been deleted successfully" };
 }

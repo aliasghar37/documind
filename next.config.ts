@@ -1,13 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-    /* config options here */
     // productionBrowserSourceMaps: false,
-    // experimental: {
-    //     preloadEntriesOnStart: false,
-    //     webpackMemoryOptimizations: true,
-    //     serverSourceMaps: false,
-    // },
+    experimental: {
+        //     preloadEntriesOnStart: false,
+        //     webpackMemoryOptimizations: true,
+        //     serverSourceMaps: false,
+        serverActions: {
+            bodySizeLimit: "15mb",
+        },
+    },
 };
 
 export default nextConfig;

@@ -26,6 +26,7 @@ export type Document = {
     fileType: string;
     pages: number;
     projectId: string;
+    projectName: string;
 };
 
 export default async function DashboardOverview() {

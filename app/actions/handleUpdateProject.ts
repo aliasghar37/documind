@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
+import { revalidatePath } from "next/cache";
 import { ProjectCategory } from "@/generated/prisma/enums";
 
 const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET;
@@ -211,12 +212,16 @@ export async function handleUpdateProject(
                             fileType: f.type || "application/pdf",
                             pages: 0,
                             userId: dbUser.id,
+                            projectName: title.trim(),
                         })),
                     },
                 },
             });
         });
 
+        revalidatePath("/dashboard");
+        revalidatePath("/dashboard/projects");
+        revalidatePath("/dashboard/documents");
         return { success: true, projectId: updatedProject.id };
     } catch (e) {
         console.error("Prisma update error:", e);

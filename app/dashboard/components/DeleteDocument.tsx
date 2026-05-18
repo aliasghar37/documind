@@ -1,6 +1,7 @@
 "use client";
 
 import { handleDeleteDocument } from "@/app/actions/handleDeleteDocument";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -16,6 +17,7 @@ import { toast } from "sonner";
 export default function DeleteDocument({ documentId }: { documentId: string }) {
     const [isDeleting, setIsDeleting] = useState(false);
     const [openDelete, setOpenDelete] = useState(false);
+    const router = useRouter();
 
     const confirmDeleteDocument = async () => {
         setIsDeleting(true);
@@ -24,6 +26,7 @@ export default function DeleteDocument({ documentId }: { documentId: string }) {
             if (result.success) {
                 toast.success(result.message);
                 setOpenDelete(false);
+                router.refresh();
             } else {
                 toast.error(result.message || "Failed to delete document.");
             }
