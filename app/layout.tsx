@@ -7,39 +7,45 @@ import { Toaster } from "sonner";
 import { ProjectHeaderProvider } from "@/components/project-header-context";
 
 const geistSans = Geist({
-    variable: "--font-geist-sans",
-    subsets: ["latin"],
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
-    subsets: ["latin"],
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-    title: "Documind",
-    description: "AI Assistant for general purpose document interaction",
+  title: "Documind",
+  description: "AI Assistant for general purpose document interaction",
 };
 
 export default function RootLayout({
-    children,
+  children,
 }: Readonly<{
-    children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
-    return (
-        <html
-            lang="en"
-            className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-        >
-            <body className="min-h-full flex flex-col">
-                <ClerkProvider>
-                    <ProjectHeaderProvider>
-                        <TopNavbar />
-                        {children}
-                        <Toaster richColors position="top-right" />
-                    </ProjectHeaderProvider>
-                </ClerkProvider>
-            </body>
-        </html>
-    );
+  return (
+	<html
+	  lang="en"
+	  className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+	>
+	  <body className="min-h-full flex flex-col">
+		<ClerkProvider
+		  appearance={{
+			options: {
+			  unsafe_disableDevelopmentModeWarnings: true,
+			},
+		  }}
+		>
+		  <ProjectHeaderProvider>
+			<TopNavbar />
+			{children}
+			<Toaster richColors position="top-right" />
+		  </ProjectHeaderProvider>
+		</ClerkProvider>
+	  </body>
+	</html>
+  );
 }
