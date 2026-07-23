@@ -46,3 +46,8 @@ AGENTS.md
 /generated/prisma
 
 /public
+
+opencode.json
+plan.txt
+/lib/rag/test.ts
+/lib/rag/tokenTracker.ts

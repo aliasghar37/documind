@@ -3,16 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  Copy,
-  Mic,
-  Send,
-  ThumbsDown,
-  ThumbsUp,
-  Globe,
-  ChevronDown,
-  ImagePlus,
-} from "lucide-react";
+import { Copy, Send,  ChevronDown } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import TextToSpeech from "./TextToSpeech";
@@ -33,10 +24,7 @@ const generateAssistantReply = (prompt: string) => {
 export function ChatInterface() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [prompt, setPrompt] = useState("");
-  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const imageInputRef = useRef<HTMLInputElement | null>(null);
   const MAX_LINES = 6;
 
   const copyMessage = async (content: string) => {
@@ -105,25 +93,6 @@ export function ChatInterface() {
 	}
   };
 
-  const handleAddImageClick = () => {
-	imageInputRef.current?.click();
-  };
-
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-	const file = event.target.files?.[0] ?? null;
-
-	if (!file) return;
-
-	if (!file.type.startsWith("image/")) {
-	  toast.error("Please select an image file.");
-	  event.target.value = "";
-	  return;
-	}
-
-	setSelectedImage(file);
-	toast.success(`${file.name} selected`);
-  };
-
   useEffect(() => {
 	adjustHeight();
   }, []);
@@ -166,24 +135,6 @@ export function ChatInterface() {
 					  variant="ghost"
 					  size="icon"
 					  className="size-8 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-					  aria-label="Like response"
-					>
-					  <ThumbsUp className="size-4" />
-					</Button>
-					<Button
-					  type="button"
-					  variant="ghost"
-					  size="icon"
-					  className="size-8 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-					  aria-label="Dislike response"
-					>
-					  <ThumbsDown className="size-4" />
-					</Button>
-					<Button
-					  type="button"
-					  variant="ghost"
-					  size="icon"
-					  className="size-8 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
 					  aria-label="Copy response"
 					  onClick={() => copyMessage(message.content)}
 					>
@@ -198,7 +149,7 @@ export function ChatInterface() {
 					  aria-label="Show references"
 					>
 					  <ChevronDown className="size-4" />
-					</Button>
+					</Button>cd /hom
 				  </div>
 				</div>
 			  )}
@@ -226,49 +177,7 @@ export function ChatInterface() {
 				  lineHeight: "20px",
 				}}
 			  />
-			  <div className="mt-2 flex items-center justify-between gap-2">
-				<div className="flex">
-				  <input
-					ref={imageInputRef}
-					type="file"
-					accept="image/*"
-					className="hidden"
-					onChange={handleImageChange}
-				  />
-				  <Button
-					type="button"
-					variant="ghost"
-					size="default"
-					onClick={handleAddImageClick}
-					className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-muted-foreground"
-					aria-label="Upload image"
-				  >
-					<ImagePlus className="size-4" />
-				  </Button>
-				  <Button
-					type="button"
-					variant={"ghost"}
-					size="default"
-					onClick={() => setWebSearchEnabled((s) => !s)}
-					className={cn(
-					  "flex items-center gap-2 rounded-md px-2 py-2 text-sm",
-					  webSearchEnabled
-						? "bg-primary text-accent-foreground "
-						: "text-muted-foreground",
-					)}
-					aria-pressed={webSearchEnabled}
-					aria-label="Toggle web search"
-				  >
-					<Globe className="size-4" />
-					<span className="text-sm">Web Search</span>
-				  </Button>
-				  {selectedImage ? (
-					<span className="ml-2 inline-flex items-center rounded-full border border-border bg-muted px-2 py-1 text-xs text-muted-foreground">
-					  {selectedImage.name}
-					</span>
-				  ) : null}
-				</div>
-
+			  <div className="mt-2 flex items-center justify-end gap-2">
 				<div className="flex items-center gap-2">
 				  <SpeechToText />
 				  {prompt.trim().length > 0 ? (

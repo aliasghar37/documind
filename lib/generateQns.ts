@@ -1,4 +1,4 @@
-import { model } from "./data";
+import { model } from "./rag/llm";
 import z from "zod";
 
 export async function generateRecommendationQns(text: string) {

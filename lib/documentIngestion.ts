@@ -3,7 +3,7 @@ import { InferenceClient } from "@huggingface/inference";
 import { PDFParse } from "pdf-parse";
 import { v4 as uuidv4 } from "uuid";
 import "dotenv/config";
-import { model } from "./data";
+import { model } from "./rag/llm";
 import { generateRecommendationQns } from "./generateQns";
 
 interface IngestionBatch {
@@ -76,7 +76,7 @@ export async function documentIngestion(document: File) {
 	// const pdfBuffer = await readFile(`${process.cwd()}/public/difference.pdf`);
 	const pdfBuffer = Buffer.from(await document.arrayBuffer());
 	parser = new PDFParse({ data: pdfBuffer });
-	const resultForQns = await parser.getText({ partial: [1, 2, 3] });
+	const resultForQns = await parser.getText({ partial: [1] });
 	const recommendationQns = await generateRecommendationQns(
 	  resultForQns.text,
 	);
