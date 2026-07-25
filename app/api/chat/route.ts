@@ -53,12 +53,24 @@ export async function POST(req: Request) {
 	return new Response("Project not found or access denied", { status: 404 });
   }
 
-  const langchainMessages: BaseMessage[] = (messages as { role: string; content: string }[]).map(
-	(m) =>
-	  m.role === "user"
-		? new HumanMessage(m.content)
-		: new AIMessage(m.content),
-  );
+  const langchainMessages: BaseMessage[] = [];
+  if (Array.isArray(messages)) {
+	for (const m of messages as any[]) {
+	  const text =
+		typeof m.content === "string"
+		  ? m.content
+		  : Array.isArray(m.parts)
+			? m.parts
+				.filter((p: any) => p?.type === "text" && typeof p.text === "string")
+				.map((p: any) => p.text)
+				.join("")
+			: "";
+	  if (!text.trim()) continue;
+	  langchainMessages.push(
+		m.role === "user" ? new HumanMessage(text) : new AIMessage(text),
+	  );
+	}
+  }
 
   langchainMessages.push(
 	new SystemMessage(

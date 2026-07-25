@@ -252,7 +252,7 @@ export default function CustomViewer({
 	  </div>
 
 	  <aside className="min-h-0 lg:col-span-1">
-		<ChatInterface />
+		<ChatInterface projectId={project.id} />
 	  </aside>
 	</div>
   );

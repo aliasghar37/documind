@@ -105,7 +105,7 @@ export async function documentIngestion(document: File) {
 	  separators: ["\n\n"],
 	});
 	const rawStrings = await textSplitter.splitText(result.text);
-
+	
 	// 3) merging multichunk tables under a single id context
 	const processedBatches: IngestionBatch[] = [];
 	const preparedBatches: PreparedBatch[] = [];

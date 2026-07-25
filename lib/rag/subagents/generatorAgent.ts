@@ -33,7 +33,7 @@ const responseFormat = z.object({
   })).describe("List of source references used to generate the answer"),
 });
 
-const model = createModel(0.3);
+const model = createModel(0.3, "openai/gpt-oss-120b");
 
 const agent = createAgent({
   name: "generatorAgent",
