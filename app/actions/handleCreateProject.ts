@@ -10,6 +10,7 @@ import "dotenv/config";
 import { documentIngestion } from "@/lib/documentIngestion";
 import { Prisma } from "@/generated/prisma/client";
 import type { IndexedBatch, DocumentMetadata } from "@/lib/documentIngestion";
+import { id } from "zod/v4/locales";
 
 const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET;
 
@@ -285,7 +286,6 @@ export async function handleCreateProject(
 		  if (!document) return [];
 
 		  return batches.map((batch, index) => ({
-			chunkId: batch.id,
 			order: index,
 			content: batch.content,
 			summary: batch.summary ?? null,

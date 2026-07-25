@@ -2,7 +2,7 @@ import { MongoClient, ObjectId } from "mongodb";
 import { generateQueryEmbeddings } from "./embeddings";
 
 interface HybridSearchResult {
-  chunkId: string;
+  id: string;
   content: string;
   summary: string;
   isTable: boolean;
@@ -94,8 +94,7 @@ async function singleHybridSearch({
 	{ $limit: topK },
 	{
 	  $project: {
-		_id: 0,
-		chunkId: "$_id",
+		_id: 1,
 		content: 1,
 		summary: 1,
 		isTable: 1,
@@ -119,7 +118,7 @@ async function singleHybridSearch({
 	);
 
 	return {
-	  chunkId: doc.chunkId?.toString() ?? "",
+	  id: doc._id?.toString() ?? "",
 	  content: doc.content,
 	  summary: doc.summary ?? "",
 	  isTable: doc.isTable ?? false,
@@ -166,11 +165,11 @@ export async function hybridSearch({
   const merged = new Map<string, HybridSearchResult>();
   for (const results of allResults) {
 	for (const r of results) {
-	  const existing = merged.get(r.chunkId);
+	  const existing = merged.get(r.id);
 	  if (existing) {
 		existing.rrfScore = Math.max(existing.rrfScore, r.rrfScore);
 	  } else {
-		merged.set(r.chunkId, { ...r });
+		merged.set(r.id, { ...r });
 	  }
 	}
   }

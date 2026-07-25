@@ -24,7 +24,7 @@ export const retrieverAgent = tool(
 
 	return JSON.stringify(
 	  rerankedChunks.map((c) => ({
-		chunkId: c.chunkId,
+		id: c.id,
 		content: c.content,
 		summary: c.summary,
 		isTable: c.isTable,

@@ -14,7 +14,7 @@ export type ProjectWithDocuments = Prisma.ProjectGetPayload<{
 }>;
 
 export type Chunk = {
-  chunkId: string;
+  id: string;
   content: string;
   summary: string;
   isTable: boolean;

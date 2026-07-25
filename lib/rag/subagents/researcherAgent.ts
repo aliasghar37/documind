@@ -137,7 +137,7 @@ export const researcherAgent = tool(
 	const gradeResp = await graderAgent.invoke({ chunks: rerankedChunks, query });
 	const grades = (gradeResp as any).grades as {
 	  chunkNumber: number;
-	  chunkId: string;
+	  id: string;
 	  confidenceScore: number;
 	  isValid: boolean;
 	  reasoning: string;
@@ -146,9 +146,9 @@ export const researcherAgent = tool(
 
 	// 4. Filter: keep only valid chunks
 	const validChunkIds = new Set(
-	  grades.filter((g) => g.isValid).map((g) => g.chunkId),
+	  grades.filter((g) => g.isValid).map((g) => g.id),
 	);
-	const validChunks = rerankedChunks.filter((c) => validChunkIds.has(c.chunkId));
+	const validChunks = rerankedChunks.filter((c) => validChunkIds.has(c.id));
 
 	console.log("researcherAgent: valid chunks:", validChunks.length, "/", rerankedChunks.length);
 

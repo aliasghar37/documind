@@ -1,7 +1,8 @@
 import { ChatOpenAI } from "@langchain/openai";
 import "dotenv/config";
 
-type ModelName = "openai/gpt-oss-20b" | "openai/gpt-oss-120b";
+type ModelName =
+  "qwen/qwen3.6-27b" | "openai/gpt-oss-20b" | "openai/gpt-oss-120b";
 
 export function createModel(
   temperature = 0,

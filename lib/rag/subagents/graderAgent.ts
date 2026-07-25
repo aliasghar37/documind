@@ -4,7 +4,7 @@ import { createModel } from "../llm";
 import { tracker } from "../tokenTracker";
 
 export const chunkSchema = z.object({
-  chunkId: z.string(),
+  id: z.string(),
   content: z.string(),
   summary: z.string(),
   isTable: z.boolean(),
@@ -23,7 +23,7 @@ const responseFormat = z.object({
 	  chunkNumber: z
 		.number()
 		.describe("1-based index matching the input JSON array"),
-	  chunkId: z.string().describe("The chunkId from the input"),
+	  id: z.string().describe("The chunk's id from the input"),
 	  confidenceScore: z
 		.number()
 		.min(0)
@@ -85,7 +85,7 @@ export const graderAgent = tool(
   async ({ chunks, query }) => {
 	const chunksJson = chunks.map((c, i) => ({
 	  chunkNumber: i + 1,
-	  chunkId: c.chunkId,
+	  id: c.id,
 	  relevanceScore: c.relevanceScore ?? null,
 	  content: c.content,
 	}));

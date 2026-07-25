@@ -93,7 +93,6 @@ model Document {
 
 model DocumentChunk {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  chunkId    String
   order      Int
   content    String
   summary    String?
