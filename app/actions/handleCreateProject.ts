@@ -10,7 +10,6 @@ import "dotenv/config";
 import { documentIngestion } from "@/lib/documentIngestion";
 import { Prisma } from "@/generated/prisma/client";
 import type { IndexedBatch, DocumentMetadata } from "@/lib/documentIngestion";
-import { id } from "zod/v4/locales";
 
 const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET;
 
@@ -65,8 +64,6 @@ export async function handleCreateProject(
 
   const title = (formData.get("title") as string) || "";
   const description = (formData.get("description") as string) || "";
-  const webSearchRaw = formData.get("webSearch") as string | null;
-  const webSearch = webSearchRaw === "true";
   const projectCategoryRaw =
 	(formData.get("projectCategory") as string) || "General Purpose";
 
@@ -240,68 +237,67 @@ export async function handleCreateProject(
 			projectsCount: { increment: 1 },
 			documentsCount: { increment: documentCount },
 
-		  projects: {
-			create: {
-			  title: title.trim(),
-			  description,
-			  recommendationQns: { create: recommendationQuestions },
-			  projectCategory,
-			  projectSettings: {
-				webSearch,
-			  },
-			  documentCount,
-			  documents: {
-				create: uploadedFiles.map((f) => ({
-				  fileUrl: f.url,
-				  fileName: f.name,
-				  fileType: f.type || "application/pdf",
-				  pages:
-					ingestions.find((ing) => ing.fileUrl === f.url)?.metadata
-					  .pageCount || 0,
-				  metadata: (ingestions.find((ing) => ing.fileUrl === f.url)
-					?.metadata ||
-					null) as unknown as Prisma.InputJsonValue | null,
-				  userId: dbUser.id,
-				  projectName: title.trim(),
-				})),
+			projects: {
+			  create: {
+				title: title.trim(),
+				description,
+				recommendationQns: { create: recommendationQuestions },
+				projectCategory,
+				documentCount,
+				documents: {
+				  create: uploadedFiles.map((f) => ({
+					fileUrl: f.url,
+					fileName: f.name,
+					fileType: f.type || "application/pdf",
+					pages:
+					  ingestions.find((ing) => ing.fileUrl === f.url)?.metadata
+						.pageCount || 0,
+					metadata: (ingestions.find((ing) => ing.fileUrl === f.url)
+					  ?.metadata ||
+					  null) as unknown as Prisma.InputJsonValue | null,
+					userId: dbUser.id,
+					projectName: title.trim(),
+				  })),
+				},
 			  },
 			},
 		  },
-		},
-		include: {
-		  projects: {
-			take: 1,
-			orderBy: { createdAt: "desc" },
-			include: { documents: true },
+		  include: {
+			projects: {
+			  take: 1,
+			  orderBy: { createdAt: "desc" },
+			  include: { documents: true },
+			},
 		  },
-		},
-	  });
-	  const project = user.projects[0];
-	  const documentByUrl = new Map(
-		project.documents.map((doc) => [doc.fileUrl, doc]),
-	  );
+		});
+		const project = user.projects[0];
+		const documentByUrl = new Map(
+		  project.documents.map((doc) => [doc.fileUrl, doc]),
+		);
 
-	  await tx.documentChunk.createMany({
-		data: ingestions.flatMap(({ fileUrl, batches }) => {
-		  const document = documentByUrl.get(fileUrl);
-		  if (!document) return [];
+		await tx.documentChunk.createMany({
+		  data: ingestions.flatMap(({ fileUrl, batches }) => {
+			const document = documentByUrl.get(fileUrl);
+			if (!document) return [];
 
-		  return batches.map((batch, index) => ({
-			order: index,
-			content: batch.content,
-			summary: batch.summary ?? null,
-			isTable: batch.isTable,
-			embedding: batch.embedding,
-			documentId: document.id,
-			projectId: project.id,
-			fileName: document.fileName,
-			pageNumber: batch.pageNumber ?? null,
-		  }));
-		}),
-	  });
+			return batches.map((batch, index) => ({
+			  order: index,
+			  content: batch.content,
+			  summary: batch.summary ?? null,
+			  isTable: batch.isTable,
+			  embedding: batch.embedding,
+			  documentId: document.id,
+			  projectId: project.id,
+			  fileName: document.fileName,
+			  pageNumber: batch.pageNumber ?? null,
+			}));
+		  }),
+		});
 
-	  return project;
-	}, { timeout: 30000 });
+		return project;
+	  },
+	  { timeout: 30000 },
+	);
 
 	revalidatePath("/dashboard");
 	revalidatePath("/dashboard/projects");

@@ -40,14 +40,12 @@ export function UpdateProject({
   oldTitle,
   oldDescription,
   oldDocuments,
-  oldIsWebSearch,
   oldProjectCategory,
   projectId,
 }: {
   oldTitle: string;
   oldDescription: string | null;
   oldDocuments: Document[] | null;
-  oldIsWebSearch: boolean;
   oldProjectCategory: ProjectCategoryType;
   projectId: string;
 }) {
@@ -57,7 +55,6 @@ export function UpdateProject({
   const [existingDocs, setExistingDocs] = useState<Document[] | null>(
 	oldDocuments,
   );
-  const [isWebSearch, setIsWebSearch] = useState(oldIsWebSearch);
   const [projectCategory, setProjectCategory] =
 	useState<ProjectCategoryType>(oldProjectCategory);
   const [openUpdate, setOpenUpdate] = useState(false);
@@ -138,7 +135,6 @@ export function UpdateProject({
 	fd.append("title", trimmedTitle);
 	fd.append("description", description || "");
 	fd.append("projectCategory", `${projectCategory}`);
-	fd.append("webSearch", `${isWebSearch}`);
 	fd.append("projectId", projectId);
 	if (files) {
 	  for (const file of Array.from(files)) {
@@ -167,7 +163,6 @@ export function UpdateProject({
 	  setFiles(null);
 	  setExistingDocs(null);
 	  setProjectCategory(projectCategories[0]);
-	  setIsWebSearch(true);
 	} catch (err) {
 	  console.error(err);
 	  toast.dismiss(loadingToastId);
@@ -324,21 +319,6 @@ export function UpdateProject({
 					</SelectContent>
 				  </Select>
 				</Field>
-
-				<div className="flex flex-col gap-2 justify-center">
-				  <Label htmlFor="web-search">Web Search</Label>
-				  <div className="flex items-center gap-2">
-					<Switch
-					  id="web-search"
-					  name="webSearchEnabled"
-					  checked={isWebSearch}
-					  onCheckedChange={(val) => setIsWebSearch(val)}
-					/>
-					<span className="text-xs text-muted-foreground">
-					  Tavily API
-					</span>
-				  </div>
-				</div>
 			  </div>
 			</FieldGroup>
 

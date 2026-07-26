@@ -73,8 +73,6 @@ export async function handleUpdateProject(
 
   const title = (formData.get("title") as string) || "";
   const description = (formData.get("description") as string) || "";
-  const webSearchRaw = (formData.get("webSearch") as string) || "true";
-  const webSearch = webSearchRaw === "true";
   const projectCategoryRaw =
 	(formData.get("projectCategory") as string) || "General Purpose";
 
@@ -232,77 +230,74 @@ export async function handleUpdateProject(
   }
 
   try {
-	const updatedProject = await prisma.$transaction(async (tx) => {
-	  await tx.user.update({
-		where: { id: dbUser.id },
-		data: {
-		  documentsCount: {
-			increment: files.length,
+	const updatedProject = await prisma.$transaction(
+	  async (tx) => {
+		await tx.user.update({
+		  where: { id: dbUser.id },
+		  data: {
+			documentsCount: {
+			  increment: files.length,
+			},
 		  },
-		},
-	  });
-
-	  const proj = await tx.project.update({
-		where: { id: projectId },
-		data: {
-		  title: title.trim(),
-		  description,
-		  documentCount,
-		  projectCategory,
-		  projectSettings: {
-			...(typeof project.projectSettings === "object" &&
-			project.projectSettings
-			  ? project.projectSettings
-			  : {}),
-			webSearch,
-		  },
-		  documents: {
-			create: uploadedFiles.map((f) => ({
-			  fileUrl: f.url,
-			  fileName: f.name,
-			  fileType: f.type || "application/pdf",
-			  pages:
-				ingestions.find((ing) => ing.fileUrl === f.url)?.metadata
-				  .pageCount || 0,
-			  metadata: (ingestions.find((ing) => ing.fileUrl === f.url)
-				?.metadata || null) as unknown as Prisma.InputJsonValue | null,
-			  userId: dbUser.id,
-			  projectName: title.trim(),
-			})),
-		  },
-		},
-		include: {
-		  documents: true,
-		},
-	  });
-
-	  if (ingestions.length > 0) {
-		const documentByUrl = new Map(
-		  proj.documents.map((doc) => [doc.fileUrl, doc]),
-		);
-
-		await tx.documentChunk.createMany({
-		  data: ingestions.flatMap(({ fileUrl, batches }) => {
-			const document = documentByUrl.get(fileUrl);
-			if (!document) return [];
-
-			return batches.map((batch, index) => ({
-			  order: index,
-			  content: batch.content,
-			  summary: batch.summary ?? null,
-			  isTable: batch.isTable,
-			  embedding: batch.embedding,
-			  documentId: document.id,
-			  projectId: proj.id,
-			  fileName: document.fileName,
-			  pageNumber: batch.pageNumber ?? null,
-			}));
-		  }),
 		});
-	  }
 
-	  return proj;
-	}, { timeout: 30000 });
+		const proj = await tx.project.update({
+		  where: { id: projectId },
+		  data: {
+			title: title.trim(),
+			description,
+			documentCount,
+			projectCategory,
+			documents: {
+			  create: uploadedFiles.map((f) => ({
+				fileUrl: f.url,
+				fileName: f.name,
+				fileType: f.type || "application/pdf",
+				pages:
+				  ingestions.find((ing) => ing.fileUrl === f.url)?.metadata
+					.pageCount || 0,
+				metadata: (ingestions.find((ing) => ing.fileUrl === f.url)
+				  ?.metadata ||
+				  null) as unknown as Prisma.InputJsonValue | null,
+				userId: dbUser.id,
+				projectName: title.trim(),
+			  })),
+			},
+		  },
+		  include: {
+			documents: true,
+		  },
+		});
+
+		if (ingestions.length > 0) {
+		  const documentByUrl = new Map(
+			proj.documents.map((doc) => [doc.fileUrl, doc]),
+		  );
+
+		  await tx.documentChunk.createMany({
+			data: ingestions.flatMap(({ fileUrl, batches }) => {
+			  const document = documentByUrl.get(fileUrl);
+			  if (!document) return [];
+
+			  return batches.map((batch, index) => ({
+				order: index,
+				content: batch.content,
+				summary: batch.summary ?? null,
+				isTable: batch.isTable,
+				embedding: batch.embedding,
+				documentId: document.id,
+				projectId: proj.id,
+				fileName: document.fileName,
+				pageNumber: batch.pageNumber ?? null,
+			  }));
+			}),
+		  });
+		}
+
+		return proj;
+	  },
+	  { timeout: 30000 },
+	);
 
 	revalidatePath("/dashboard");
 	revalidatePath("/dashboard/projects");

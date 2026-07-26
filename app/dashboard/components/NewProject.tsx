@@ -38,7 +38,6 @@ export function CreateNewProject() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<FileList | null>(null);
-  const [isWebSearch, setIsWebSearch] = useState(true);
   const [projectCategory, setProjectCategory] = useState<ProjectCategoryType>(
 	projectCategories[0],
   );
@@ -118,7 +117,6 @@ export function CreateNewProject() {
 	fd.append("title", trimmedTitle);
 	fd.append("description", description || "");
 	fd.append("projectCategory", `${projectCategory}`);
-	fd.append("webSearch", `${isWebSearch}`);
 
 	for (const file of Array.from(files)) {
 	  fd.append("docs", file, file.name);
@@ -147,7 +145,6 @@ export function CreateNewProject() {
 	  setDescription("");
 	  setFiles(null);
 	  setProjectCategory(projectCategories[0]);
-	  setIsWebSearch(true);
 	  setOpenDialog(false);
 	} catch (err) {
 	  console.error(err);
@@ -270,21 +267,6 @@ export function CreateNewProject() {
 				  </SelectContent>
 				</Select>
 			  </Field>
-
-			  <div className="flex flex-col gap-2 justify-center">
-				<Label htmlFor="web-search">Web Search</Label>
-				<div className="flex items-center gap-2">
-				  <Switch
-					id="web-search"
-					name="webSearchEnabled"
-					checked={isWebSearch}
-					onCheckedChange={setIsWebSearch}
-				  />
-				  <span className="text-xs text-muted-foreground">
-					Tavily API
-				  </span>
-				</div>
-			  </div>
 			</div>
 		  </FieldGroup>
 
