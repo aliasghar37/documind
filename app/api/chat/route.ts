@@ -1,5 +1,5 @@
 import { toUIMessageStream } from "@ai-sdk/langchain";
-import { createUIMessageStreamResponse } from "ai";
+import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 import { managerAgent } from "@/lib/rag/managerAgent";
 import { HumanMessage, AIMessage, SystemMessage, BaseMessage } from "@langchain/core/messages";
 import { auth } from "@clerk/nextjs/server";
@@ -10,19 +10,6 @@ export const dynamic = "force-dynamic";
 
 function isValidObjectId(id: string) {
   return /^[a-fA-F0-9]{24}$/.test(id);
-}
-
-function parseAgentResponse(raw: string): {
-  answer: string;
-  references: any[];
-} {
-  try {
-	const parsed = JSON.parse(raw);
-	if (parsed.answer && Array.isArray(parsed.references)) {
-	  return { answer: parsed.answer, references: parsed.references };
-	}
-  } catch {}
-  return { answer: raw, references: [] };
 }
 
 export async function POST(req: Request) {
@@ -80,12 +67,40 @@ export async function POST(req: Request) {
 	),
   );
 
-  const stream = managerAgent.streamEvents(
+  const graphStream = await managerAgent.stream(
 	{ messages: langchainMessages },
-	{ version: "v2" },
+	{ streamMode: ["messages", "values"] },
   );
 
-  return createUIMessageStreamResponse({
-	stream: toUIMessageStream(stream),
+  const stream = createUIMessageStream({
+	execute: async ({ writer }) => {
+	  const state: { structuredResponse?: { answer: string; references: any[] } } = {};
+
+	  const innerStream = toUIMessageStream<{
+		structuredResponse?: { answer: string; references: any[] };
+	  }>(graphStream, {
+		onFinish: async (finalState) => {
+		  if (finalState?.structuredResponse) {
+			state.structuredResponse = finalState.structuredResponse;
+		  }
+		},
+	  });
+
+	  const reader = innerStream.getReader();
+	  while (true) {
+		const { done, value } = await reader.read();
+		if (done) break;
+		writer.write(value);
+	  }
+
+	  if (state.structuredResponse) {
+		const text = JSON.stringify(state.structuredResponse);
+		writer.write({ type: "text-start", id: "structured-answer" });
+		writer.write({ type: "text-delta", delta: text, id: "structured-answer" });
+		writer.write({ type: "text-end", id: "structured-answer" });
+	  }
+	},
   });
+
+  return createUIMessageStreamResponse({ stream });
 }

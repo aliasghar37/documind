@@ -48,7 +48,18 @@ export function ChatInterface({ projectId }: { projectId: string }) {
 		const jsonStart = cleaned.indexOf("{");
 		const jsonEnd = cleaned.lastIndexOf("}");
 		if (jsonStart !== -1 && jsonEnd > jsonStart) {
-		  const parsed = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1));
+		  let parsed = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1));
+		  if (typeof parsed.answer === "string") {
+			const inner = parsed.answer.trim();
+			if (inner.startsWith("{")) {
+			  try {
+				const nested = JSON.parse(inner);
+				if (nested.answer && Array.isArray(nested.references)) {
+				  parsed = nested;
+				}
+			  } catch {}
+			}
+		  }
 		  if (parsed.answer && Array.isArray(parsed.references)) {
 			setParsedResponses((prev) => new Map(prev).set(message.id, parsed));
 			return;
@@ -115,6 +126,47 @@ export function ChatInterface({ projectId }: { projectId: string }) {
 	  scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
 	}
   }, [messages, parsedResponses, isLoading]);
+
+  useEffect(() => {
+	if (status !== "ready") return;
+	setParsedResponses((prev) => {
+	  let changed = false;
+	  const next = new Map(prev);
+	  for (const message of messages) {
+		if (message.role !== "assistant" || next.has(message.id)) continue;
+		const text = getMessageText(message);
+		if (!text.trim()) continue;
+		try {
+		  let cleaned = text.trim();
+		  cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+		  const jsonStart = cleaned.indexOf("{");
+		  const jsonEnd = cleaned.lastIndexOf("}");
+		  if (jsonStart !== -1 && jsonEnd > jsonStart) {
+			let parsed = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1));
+			if (typeof parsed.answer === "string") {
+			  const inner = parsed.answer.trim();
+			  if (inner.startsWith("{")) {
+				try {
+				  const nested = JSON.parse(inner);
+				  if (nested.answer && Array.isArray(nested.references)) {
+					parsed = nested;
+				  }
+				} catch {}
+			  }
+			}
+			if (parsed.answer && Array.isArray(parsed.references)) {
+			  next.set(message.id, parsed);
+			  changed = true;
+			  continue;
+			}
+		  }
+		} catch {}
+		next.set(message.id, { answer: text, references: [] });
+		changed = true;
+	  }
+	  return changed ? next : prev;
+	});
+  }, [status, messages]);
 
   const getDisplayText = (message: UIMessage) => {
 	const parsed = parsedResponses.get(message.id);

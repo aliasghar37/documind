@@ -19,13 +19,31 @@ function cleanContent(text: string): string {
 	.trim();
 }
 
+const MAX_RETRIES = 2;
+const BASE_DELAY_MS = 1000;
+
+type TavilyResult = { title: string; url: string; content: string; score: number };
+
+async function tavilyWithRetry(query: string, attempt = 0): Promise<TavilyResult[]> {
+  try {
+	const resp = await tavily.invoke({ query });
+	return (resp as any).results ?? [];
+  } catch (error) {
+	if (attempt < MAX_RETRIES) {
+	  const delay = BASE_DELAY_MS * Math.pow(2, attempt);
+	  await new Promise((r) => setTimeout(r, delay));
+	  return tavilyWithRetry(query, attempt + 1);
+	}
+	throw error;
+  }
+}
+
 export const webSearchAgent = tool(
   async ({ query }: { query: string }) => {
-	let results: { title: string; url: string; content: string; score: number }[];
+	let results: TavilyResult[];
 
 	try {
-	  const resp = await tavily.invoke({ query });
-	  results = (resp as any).results ?? [];
+	  results = await tavilyWithRetry(query);
 	} catch (error) {
 	  const message = error instanceof Error ? error.message : "Tavily search failed";
 	  return JSON.stringify({
