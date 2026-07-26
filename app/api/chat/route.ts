@@ -34,11 +34,19 @@ export async function POST(req: Request) {
 
   const project = await prisma.project.findFirst({
 	where: { id: projectId, userId: dbUser.id },
-	select: { id: true },
+	select: { id: true, projectCategory: true },
   });
   if (!project) {
 	return new Response("Project not found or access denied", { status: 404 });
   }
+
+  const CATEGORY_DISPLAY: Record<string, string> = {
+	GENERAL_PURPOSE: "General Purpose",
+	ACADEMIC_AND_EDUCATION: "Academic & Education",
+	PROFESSIONAL_AND_OFFICE: "Professional & Office",
+	MEDICAL_AND_HEALTH: "Medical & Healthcare",
+  };
+  const categoryLabel = CATEGORY_DISPLAY[project.projectCategory] ?? "General Purpose";
 
   const langchainMessages: BaseMessage[] = [];
   if (Array.isArray(messages)) {
@@ -61,8 +69,9 @@ export async function POST(req: Request) {
 
   langchainMessages.push(
 	new SystemMessage(
-	  `Context: Project ID "${projectId}". ` +
+	  `Context: Project ID "${projectId}", Category: "${categoryLabel}". ` +
 		`When calling researcherAgent, always pass this projectId. ` +
+		`When calling generatorAgent, always pass the Category as the "category" parameter. ` +
 		`The user's question is in the last message.`,
 	),
   );

@@ -6,6 +6,9 @@ import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { ProjectCategory } from "@/generated/prisma/enums";
+import { documentIngestion } from "@/lib/documentIngestion";
+import type { IndexedBatch, DocumentMetadata } from "@/lib/documentIngestion";
+import { Prisma } from "@/generated/prisma/client";
 
 const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET;
 
@@ -75,7 +78,6 @@ export async function handleUpdateProject(
   const projectCategoryRaw =
 	(formData.get("projectCategory") as string) || "General Purpose";
 
-  console.log("projectCategoryRaw:", projectCategoryRaw);
   const CATEGORY_MAP: Record<string, string> = {
 	"General Purpose": "GENERAL_PURPOSE",
 	"Academic & Education": "ACADEMIC_AND_EDUCATION",
@@ -134,6 +136,7 @@ export async function handleUpdateProject(
   }
   const documentCount = project.documentCount + files.length;
 
+  const uploadedPaths: string[] = [];
   const uploadedFiles: {
 	path: string;
 	url: string;
@@ -142,41 +145,90 @@ export async function handleUpdateProject(
 	type: string;
   }[] = [];
 
-  console.log(title, description, webSearch, projectCategory);
+  async function cleanupUploadedFiles() {
+	for (const path of uploadedPaths) {
+	  try {
+		await supabase.storage.from(SUPABASE_BUCKET as string).remove([path]);
+	  } catch (err) {
+		console.warn("Failed to cleanup file", path, err);
+	  }
+	}
+  }
 
-  for (const file of files) {
-	const safeName = sanitizeFileName(file.name || `file-${randomUUID()}.pdf`);
-	const key = `${dbUser.id}/${randomUUID()}-${safeName}`;
-	const arrayBuffer = await file.arrayBuffer();
-	const buffer = Buffer.from(arrayBuffer);
+  const ingestions: Array<{
+	fileUrl: string;
+	batches: IndexedBatch[];
+	metadata: DocumentMetadata;
+  }> = [];
 
-	const { error: uploadError } = await supabase.storage
-	  .from(SUPABASE_BUCKET as string)
-	  .upload(key, buffer, {
-		contentType: "application/pdf",
-		upsert: false,
-	  });
+  if (files.length > 0) {
+	try {
+	  const results = await Promise.all(
+		files.map(async (file) => {
+		  const safeName = sanitizeFileName(
+			file.name || `file-${randomUUID()}.pdf`,
+		  );
+		  const key = `${dbUser.id}/${randomUUID()}-${safeName}`;
+		  const arrayBuffer = await file.arrayBuffer();
+		  const buffer = Buffer.from(arrayBuffer);
 
-	if (uploadError) {
-	  console.error("Supabase upload error:", uploadError);
+		  const { error: uploadError } = await supabase.storage
+			.from(SUPABASE_BUCKET as string)
+			.upload(key, buffer, {
+			  contentType: "application/pdf",
+			  upsert: false,
+			});
+
+		  if (uploadError) {
+			console.error("Supabase upload error:", uploadError);
+			throw new Error(`Failed to upload ${file.name}.`);
+		  }
+
+		  uploadedPaths.push(key);
+
+		  const { data: publicData } = supabase.storage
+			.from(SUPABASE_BUCKET as string)
+			.getPublicUrl(key);
+		  const publicUrl = publicData?.publicUrl || "";
+
+		  const resp = await documentIngestion(file);
+		  if (!resp || !resp.success) {
+			throw new Error(`Failed process the document ${file.name}`);
+		  }
+
+		  return {
+			uploadedFile: {
+			  path: key,
+			  url: publicUrl,
+			  name: file.name,
+			  size: file.size,
+			  type: file.type,
+			},
+			ingestion: resp.batches
+			  ? {
+				  fileUrl: publicUrl,
+				  batches: resp.batches,
+				  metadata: resp.metadata,
+				}
+			  : null,
+		  };
+		}),
+	  );
+
+	  for (const result of results) {
+		uploadedFiles.push(result.uploadedFile);
+		if (result.ingestion) {
+		  ingestions.push(result.ingestion);
+		}
+	  }
+	} catch (error) {
+	  await cleanupUploadedFiles();
 	  return {
 		success: false,
-		message: `Failed to upload ${file.name}.`,
+		message:
+		  error instanceof Error ? error.message : "Failed to process files.",
 	  };
 	}
-
-	const { data: publicData } = supabase.storage
-	  .from(SUPABASE_BUCKET as string)
-	  .getPublicUrl(key);
-	const publicUrl = publicData?.publicUrl || "";
-
-	uploadedFiles.push({
-	  path: key,
-	  url: publicUrl,
-	  name: file.name,
-	  size: file.size,
-	  type: file.type,
-	});
   }
 
   try {
@@ -189,7 +241,8 @@ export async function handleUpdateProject(
 		  },
 		},
 	  });
-	  return tx.project.update({
+
+	  const proj = await tx.project.update({
 		where: { id: projectId },
 		data: {
 		  title: title.trim(),
@@ -208,14 +261,48 @@ export async function handleUpdateProject(
 			  fileUrl: f.url,
 			  fileName: f.name,
 			  fileType: f.type || "application/pdf",
-			  pages: 0,
+			  pages:
+				ingestions.find((ing) => ing.fileUrl === f.url)?.metadata
+				  .pageCount || 0,
+			  metadata: (ingestions.find((ing) => ing.fileUrl === f.url)
+				?.metadata || null) as unknown as Prisma.InputJsonValue | null,
 			  userId: dbUser.id,
 			  projectName: title.trim(),
 			})),
 		  },
 		},
+		include: {
+		  documents: true,
+		},
 	  });
-	});
+
+	  if (ingestions.length > 0) {
+		const documentByUrl = new Map(
+		  proj.documents.map((doc) => [doc.fileUrl, doc]),
+		);
+
+		await tx.documentChunk.createMany({
+		  data: ingestions.flatMap(({ fileUrl, batches }) => {
+			const document = documentByUrl.get(fileUrl);
+			if (!document) return [];
+
+			return batches.map((batch, index) => ({
+			  order: index,
+			  content: batch.content,
+			  summary: batch.summary ?? null,
+			  isTable: batch.isTable,
+			  embedding: batch.embedding,
+			  documentId: document.id,
+			  projectId: proj.id,
+			  fileName: document.fileName,
+			  pageNumber: batch.pageNumber ?? null,
+			}));
+		  }),
+		});
+	  }
+
+	  return proj;
+	}, { timeout: 30000 });
 
 	revalidatePath("/dashboard");
 	revalidatePath("/dashboard/projects");
@@ -223,15 +310,7 @@ export async function handleUpdateProject(
 	return { success: true, projectId: updatedProject.id };
   } catch (e) {
 	console.error("Prisma update error:", e);
-	// rollback uploaded files on failure
-	for (const f of uploadedFiles) {
-	  try {
-		await supabase.storage.from(SUPABASE_BUCKET as string).remove([f.path]);
-	  } catch (err) {
-		console.warn("Failed to cleanup file", f.path, err);
-	  }
-	}
-
+	await cleanupUploadedFiles();
 	return { success: false, message: "Failed to update project." };
   }
 }

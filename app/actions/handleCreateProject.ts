@@ -232,12 +232,13 @@ export async function handleCreateProject(
   }
 
   try {
-	const project = await prisma.$transaction(async (tx) => {
-	  const user = await tx.user.update({
-		where: { id: dbUser.id },
-		data: {
-		  projectsCount: { increment: 1 },
-		  documentsCount: { increment: documentCount },
+	const project = await prisma.$transaction(
+	  async (tx) => {
+		const user = await tx.user.update({
+		  where: { id: dbUser.id },
+		  data: {
+			projectsCount: { increment: 1 },
+			documentsCount: { increment: documentCount },
 
 		  projects: {
 			create: {
@@ -300,7 +301,7 @@ export async function handleCreateProject(
 	  });
 
 	  return project;
-	});
+	}, { timeout: 30000 });
 
 	revalidatePath("/dashboard");
 	revalidatePath("/dashboard/projects");
