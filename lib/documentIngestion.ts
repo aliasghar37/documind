@@ -10,6 +10,7 @@ interface IngestionBatch {
   id: string;
   content: string;
   isTable: boolean;
+  pageNumber?: number;
 }
 
 export interface IndexedBatch extends IngestionBatch {
@@ -48,44 +49,36 @@ export interface DocumentIngestionResponse {
 const hf = new InferenceClient(process.env.HUGGINGFACE_ACCESS_TOKEN);
 
 function isStructuredLayout(content: string): boolean {
-  const lines = content
-	.split("\n")
-	.map((l) => l.trim())
-	.filter(Boolean);
+  const lines = content.split("\n").filter(Boolean);
   if (lines.length === 0) return false;
 
-  let structuralLinesCount = 0;
+  let tableLikeLines = 0;
   for (const line of lines) {
-	const words = line.split(/\s+/).filter(Boolean);
-	const isMultiValueLine = words.length >= 2 && words.length <= 12;
-	const isShortLayoutLine = line.length < 80;
-	const hasDataIndicators = /[:|\-|—●•\d]/.test(line);
-
-	if (isMultiValueLine && (isShortLayoutLine || hasDataIndicators)) {
-	  structuralLinesCount++;
-	}
+	const hasTabs = /\t/.test(line);
+	const hasPipes = /\|/.test(line);
+	if (hasTabs || hasPipes) tableLikeLines++;
   }
-  return structuralLinesCount / lines.length >= 0.5;
+  return tableLikeLines / lines.length >= 0.2;
 }
 
 export async function documentIngestion(document: File) {
   let parser: PDFParse | undefined;
   try {
-	// 1) Loading pdf dataa,parsing and splitting it
+	// Loading pdf dataa,parsing and splitting it
 
 	// const pdfBuffer = await readFile(`${process.cwd()}/public/difference.pdf`);
 	const pdfBuffer = Buffer.from(await document.arrayBuffer());
 	parser = new PDFParse({ data: pdfBuffer });
-	const resultForQns = await parser.getText({ partial: [1] });
+	const resultForQns = await parser.getText({ partial: [1, 2, 3, 4] });
 	const recommendationQns = await generateRecommendationQns(
 	  resultForQns.text,
 	);
 
-	const result = await parser.getText();
 	const infoResult = await parser.getInfo();
+	const totalPages = infoResult.total || 1;
 
 	const pdfMetadata: DocumentMetadata = {
-	  pageCount: infoResult.total || 0,
+	  pageCount: totalPages,
 	  title: infoResult.info?.Title || undefined,
 	  author: infoResult.info?.Author || undefined,
 	  subject: infoResult.info?.Subject || undefined,
@@ -96,60 +89,74 @@ export async function documentIngestion(document: File) {
 	  pdfFormat: infoResult.info?.format || undefined,
 	  totalChunks: 0,
 	  tableChunks: 0,
-	  totalCharacters: result.text?.length || 0,
+	  totalCharacters: 0,
 	};
 
+	const pageBoundaries: { page: number; start: number; end: number }[] = [];
+	let fullText = "";
+	const pageMarkerPattern = /^\s*--\s*\d+\s+of\s+\d+\s*--\s*$/;
+	for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+	  const pageResult = await parser.getText({ partial: [pageNum] });
+	  const pageText = (pageResult.text ?? "").trim();
+	  if (!pageText || pageMarkerPattern.test(pageText)) {
+		console.log(`[ingestion] Skipping page ${pageNum}: "${pageText.slice(0, 50)}"`);
+		continue;
+	  }
+	  console.log(`[ingestion] Page ${pageNum}: ${pageText.length} chars`);
+	  pageBoundaries.push({
+		page: pageNum,
+		start: fullText.length,
+		end: fullText.length + pageText.length,
+	  });
+	  fullText += pageText + "\n\n";
+	}
+	pdfMetadata.totalCharacters = fullText.length;
+
+	function getPageNumber(charOffset: number): number {
+	  for (const boundary of pageBoundaries) {
+		if (charOffset >= boundary.start && charOffset < boundary.end) {
+		  return boundary.page;
+		}
+	  }
+	  return pageBoundaries.length > 0
+		? pageBoundaries[pageBoundaries.length - 1].page
+		: 1;
+	}
+
+	// Split the full text — cross-page paragraphs stay intact
 	const textSplitter = new RecursiveCharacterTextSplitter({
 	  chunkSize: 1200,
-	  chunkOverlap: 120,
+	  chunkOverlap: 200,
 	  separators: ["\n\n"],
 	});
-	const rawStrings = await textSplitter.splitText(result.text);
-	
-	// 3) merging multichunk tables under a single id context
+	const rawChunks = (await textSplitter.splitText(fullText)).filter(
+	  (chunk) => !pageMarkerPattern.test(chunk.trim()),
+	);
+	console.log(`[ingestion] textSplitter produced ${rawChunks.length} chunks after filtering page markers`);
+
+	// Process each chunk independently — no merging
 	const processedBatches: IngestionBatch[] = [];
 	const preparedBatches: PreparedBatch[] = [];
 	const indexedBatches: IndexedBatch[] = [];
-	let activeTableChunks: string[] = [];
-	let activeTableId: string | null = null;
+	let searchFrom = 0;
 
-	for (const rawChunk of rawStrings) {
+	for (const rawChunk of rawChunks) {
 	  const content = rawChunk.trim();
 	  if (!content) continue;
 
-	  if (isStructuredLayout(content)) {
-		if (!activeTableId) {
-		  activeTableId = uuidv4();
-		}
-		activeTableChunks.push(content);
-	  } else {
-		if (activeTableChunks.length > 0 && activeTableId) {
-		  processedBatches.push({
-			id: activeTableId,
-			content: activeTableChunks.join("\n\n"),
-			isTable: true,
-		  });
-		  activeTableChunks = [];
-		  activeTableId = null;
-		}
+	  const charIndex = fullText.indexOf(content, searchFrom);
+	  const pageNumber = getPageNumber(charIndex >= 0 ? charIndex : searchFrom);
+	  if (charIndex >= 0) searchFrom = charIndex + content.length;
 
-		processedBatches.push({
-		  id: uuidv4(),
-		  content: content,
-		  isTable: false,
-		});
-	  }
-	}
-
-	if (activeTableChunks.length > 0 && activeTableId) {
 	  processedBatches.push({
-		id: activeTableId,
-		content: activeTableChunks.join("\n\n"),
-		isTable: true,
+		id: uuidv4(),
+		content,
+		isTable: isStructuredLayout(content),
+		pageNumber,
 	  });
 	}
 
-	// 4) EMBEDDING & SUMMARY AGGREGATION
+	//EMBEDDING & SUMMARY AGGREGATION
 	const tableBatches = processedBatches.filter((b) => b.isTable);
 	const nonTableBatches = processedBatches.filter((b) => !b.isTable);
 

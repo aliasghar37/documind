@@ -12,6 +12,8 @@ interface HybridSearchResult {
   rrfScore: number;
   vectorRank: number;
   textRank: number;
+  fileName?: string | null;
+  pageNumber?: number | null;
 }
 
 let client: MongoClient;
@@ -101,6 +103,8 @@ async function singleHybridSearch({
 		order: 1,
 		documentId: 1,
 		projectId: 1,
+		fileName: 1,
+		pageNumber: 1,
 		scoreDetails: 1,
 	  },
 	},
@@ -128,6 +132,8 @@ async function singleHybridSearch({
 	  rrfScore: doc.scoreDetails?.value ?? 0,
 	  vectorRank: vector?.rank ?? -1,
 	  textRank: text?.rank ?? -1,
+	  fileName: doc.fileName ?? null,
+	  pageNumber: doc.pageNumber ?? null,
 	};
   });
 }

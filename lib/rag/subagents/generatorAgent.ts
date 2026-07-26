@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { createAgent, tool } from "langchain";
 import { createModel } from "../llm";
-import { tracker } from "../tokenTracker";
 
 const systemPrompt = `You are GeneratorAgent in a multi-agent Question Answering system.
 Your role is to generate the final, user-facing answer from validated document chunks.
@@ -25,15 +24,34 @@ Generate a clear, concise, and accurate answer using ONLY the information presen
 - Use a professional, helpful tone.`;
 
 const responseFormat = z.object({
-  answer: z.string().describe("The final answer to the user's question, without any inline references or URLs"),
-  references: z.array(z.object({
-	title: z.string().describe("Source title or document name"),
-	url: z.string().optional().describe("URL if available (web search results)"),
-	documentId: z.string().optional().describe("Document ID if from uploaded documents"),
-  })).describe("List of source references used to generate the answer"),
+  answer: z
+	.string()
+	.describe(
+	  "The final answer to the user's question, without any inline references or URLs",
+	),
+  references: z
+	.array(
+	  z.object({
+		title: z.string().describe("Source title or document name"),
+		url: z
+		  .string()
+		  .optional()
+		  .describe("URL if available (web search results)"),
+		documentId: z
+		  .string()
+		  .optional()
+		  .describe("Document ID if from uploaded documents"),
+		pageNumber: z
+		  .number()
+		  .nullable()
+		  .optional()
+		  .describe("Page number in the document if available"),
+	  }),
+	)
+	.describe("List of source references used to generate the answer"),
 });
 
-const model = createModel(0.3, "qwen/qwen3.6-27b");
+const model = createModel(0.2, "openai/gpt-oss-120b");
 
 const agent = createAgent({
   name: "generatorAgent",
@@ -46,9 +64,7 @@ export async function generateFromChunks(
   chunks: { content: string; score?: number; metadata?: Record<string, any> }[],
   query: string,
 ): Promise<string> {
-  const context = chunks
-	.map((c, i) => `[${i + 1}] ${c.content}`)
-	.join("\n\n");
+  const context = chunks.map((c, i) => `[${i + 1}] ${c.content}`).join("\n\n");
 
   const result = await agent.invoke({
 	messages: [
@@ -58,15 +74,21 @@ export async function generateFromChunks(
 	  },
 	],
   });
-  tracker.track("generatorAgent", result.messages);
 
-  const answer = result.structuredResponse?.answer ?? "I was unable to generate an answer. Please try again.";
+  const answer =
+	result.structuredResponse?.answer ??
+	"I was unable to generate an answer. Please try again.";
   const references = chunks
 	.filter((c) => c.metadata)
 	.map((c) => ({
-	  title: c.metadata!.title ?? c.metadata!.documentId ?? "Unknown",
+	  title:
+		c.metadata!.fileName ??
+		c.metadata!.title ??
+		c.metadata!.documentId ??
+		"Unknown",
 	  url: c.metadata!.url,
 	  documentId: c.metadata!.documentId,
+	  pageNumber: c.metadata!.pageNumber ?? null,
 	}));
 
   return JSON.stringify({ answer, references });
@@ -77,7 +99,11 @@ export const generatorAgent = tool(
 	chunks,
 	query,
   }: {
-	chunks: { content: string; score?: number; metadata?: Record<string, any> }[];
+	chunks: {
+	  content: string;
+	  score?: number;
+	  metadata?: Record<string, any>;
+	}[];
 	query: string;
   }) => {
 	return generateFromChunks(chunks, query);

@@ -5,7 +5,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, isTextUIPart, type UIMessage } from "ai";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Copy, Send, ChevronDown, Loader2 } from "lucide-react";
+import { Copy, Send, Loader2, Globe, FileText, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import Markdown from "react-markdown";
@@ -14,7 +14,7 @@ import SpeechToText from "./SpeechToText";
 
 type ParsedResponse = {
   answer: string;
-  references: { title: string; url?: string; documentId?: string }[];
+  references: { title: string; url?: string; documentId?: string; pageNumber?: number | null }[];
 };
 
 function getMessageText(message: UIMessage): string {
@@ -28,7 +28,7 @@ export function ChatInterface({ projectId }: { projectId: string }) {
   const [parsedResponses, setParsedResponses] = useState<
 	Map<string, ParsedResponse>
   >(new Map());
-  const [openRefs, setOpenRefs] = useState<Set<string>>(new Set());
+  const [expandedRefs, setExpandedRefs] = useState<Set<string>>(new Set());
   const [input, setInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -43,18 +43,18 @@ export function ChatInterface({ projectId }: { projectId: string }) {
 	onFinish: ({ message }) => {
 	  const text = getMessageText(message);
 	  try {
-		console.log(">>> TRY CATCH RESPONSE: ", message);
-		const jsonStart = text.indexOf("{");
-		const jsonEnd = text.lastIndexOf("}");
+		let cleaned = text.trim();
+		cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+		const jsonStart = cleaned.indexOf("{");
+		const jsonEnd = cleaned.lastIndexOf("}");
 		if (jsonStart !== -1 && jsonEnd > jsonStart) {
-		  const parsed = JSON.parse(text.slice(jsonStart, jsonEnd + 1));
+		  const parsed = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1));
 		  if (parsed.answer && Array.isArray(parsed.references)) {
 			setParsedResponses((prev) => new Map(prev).set(message.id, parsed));
 			return;
 		  }
 		}
 	  } catch {}
-	  console.log(">>> ON FINISH RESPONSE: ", message);
 	  setParsedResponses((prev) =>
 		new Map(prev).set(message.id, { answer: text, references: [] }),
 	  );
@@ -68,15 +68,6 @@ export function ChatInterface({ projectId }: { projectId: string }) {
 	  await navigator.clipboard.writeText(text);
 	  toast.success("Message has been copied");
 	}
-  };
-
-  const toggleRefs = (id: string) => {
-	setOpenRefs((prev) => {
-	  const next = new Set(prev);
-	  if (next.has(id)) next.delete(id);
-	  else next.add(id);
-	  return next;
-	});
   };
 
   const adjustHeight = (el?: HTMLTextAreaElement | null) => {
@@ -128,14 +119,7 @@ export function ChatInterface({ projectId }: { projectId: string }) {
   const getDisplayText = (message: UIMessage) => {
 	const parsed = parsedResponses.get(message.id);
 	if (parsed?.answer) return parsed.answer;
-	// During streaming, show only text parts (not raw JSON)
-	if (message.role === "assistant") {
-	  const text = getMessageText(message);
-	  const jsonStart = text.indexOf("{");
-	  if (jsonStart !== -1) return text.slice(0, jsonStart).trim();
-	  return text;
-	}
-	return getMessageText(message);
+	return "";
   };
 
   const getReferences = (message: { id: string }) => {
@@ -178,86 +162,116 @@ export function ChatInterface({ projectId }: { projectId: string }) {
 				</div>
 			  ) : (
 				<div className="max-w-[88%] text-foreground px-3 py-2">
-				  <div className="prose prose-sm dark:prose-invert max-w-none">
-					<Markdown>{getDisplayText(message)}</Markdown>
-				  </div>
+				  {(() => {
+					const displayText = getDisplayText(message);
+					const refs = getReferences(message);
+					const isComplete = parsedResponses.has(message.id);
+					const refsExpanded = expandedRefs.has(message.id);
 
-				  {getReferences(message).length > 0 && (
-					<div className="mt-2">
-					  <button
-						type="button"
-						onClick={() => toggleRefs(message.id)}
-						className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-					  >
-						<span>
-						  {getReferences(message).length} source
-						  {getReferences(message).length !== 1 ? "s" : ""}
-						</span>
-						<ChevronDown
-						  className={cn(
-							"size-3 transition-transform duration-200",
-							openRefs.has(message.id) && "rotate-180",
+					if (!isComplete) {
+					  if (message.id === lastMessage?.id && isStreamingLastMessage) {
+						return (
+						  <div className="flex items-center gap-1.5 py-1">
+							<Loader2 className="size-4 animate-spin text-muted-foreground" />
+							<span className="text-sm text-muted-foreground">Thinking...</span>
+						  </div>
+						);
+					  }
+					  return null;
+					}
+
+					return (
+					  <>
+						<div className="prose prose-sm dark:prose-invert max-w-none">
+						  <Markdown>{displayText}</Markdown>
+						</div>
+
+						<div className="mt-2 flex items-center gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+						  <Button
+							type="button"
+							variant="ghost"
+							size="icon"
+							className="size-8 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+							aria-label="Copy response"
+							onClick={() => copyMessage(displayText)}
+						  >
+							<Copy className="size-4" />
+						  </Button>
+						  <TextToSpeech text={displayText} />
+						  {refs.length > 0 && (
+							<Button
+							  type="button"
+							  variant="ghost"
+							  size="icon"
+							  className="size-8 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+							  aria-label="Show references"
+							  onClick={() =>
+								setExpandedRefs((prev) => {
+								  const next = new Set(prev);
+								  if (next.has(message.id)) {
+									next.delete(message.id);
+								  } else {
+									next.add(message.id);
+								  }
+								  return next;
+								})
+							  }
+							>
+							  {refsExpanded ? (
+								<ChevronUp className="size-4" />
+							  ) : (
+								<ChevronDown className="size-4" />
+							  )}
+							</Button>
 						  )}
-						/>
-					  </button>
-					  {openRefs.has(message.id) && (
-						<div className="mt-2 space-y-1 rounded-lg bg-muted/50 px-3 py-2">
-						  {getReferences(message).map((ref, i) => (
-							<div key={i} className="text-xs">
-							  <span className="font-medium text-muted-foreground">
-								[{i + 1}]{" "}
-							  </span>
-							  {ref.url ? (
+						</div>
+
+						{refsExpanded && refs.length > 0 && (
+						  <div className="mt-2 flex flex-wrap gap-1.5">
+							{refs.map((ref, i) => {
+							  const icon = ref.url ? (
+								<Globe className="size-3.5 shrink-0" />
+							  ) : (ref.documentId || ref.pageNumber) ? (
+								<FileText className="size-3.5 shrink-0" />
+							  ) : (
+								<Sparkles className="size-3.5 shrink-0" />
+							  );
+							  const label = ref.url
+								? ref.title
+								: ref.pageNumber
+								  ? `${ref.title} (p. ${ref.pageNumber})`
+								  : ref.title || "Unknown";
+
+							  const chipClass =
+								"inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-secondary/50 px-2.5 py-1 text-xs font-medium text-secondary-foreground transition-colors hover:bg-secondary hover:text-foreground";
+
+							  return ref.url ? (
 								<a
+								  key={i}
 								  href={ref.url}
 								  target="_blank"
 								  rel="noopener noreferrer"
-								  className="text-primary underline underline-offset-2 hover:text-primary/80"
+								  className={chipClass}
 								>
-								  {ref.title}
+								  {icon}
+								  {label}
 								</a>
 							  ) : (
-								<span className="text-foreground/80">
-								  {ref.title}
+								<span key={i} className={chipClass}>
+								  {icon}
+								  {label}
 								</span>
-							  )}
-							</div>
-						  ))}
-						</div>
-					  )}
-					</div>
-				  )}
-
-				  <div className="mt-2 flex items-center gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-					<Button
-					  type="button"
-					  variant="ghost"
-					  size="icon"
-					  className="size-8 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-					  aria-label="Copy response"
-					  onClick={() => copyMessage(getDisplayText(message))}
-					>
-					  <Copy className="size-4" />
-					</Button>
-					<TextToSpeech text={getDisplayText(message)} />
-				  </div>
+							  );
+							})}
+						  </div>
+						)}
+					  </>
+					);
+				  })()}
 				</div>
 			  )}
 			</div>
 		  ))}
-
-		  {isStreamingLastMessage && (
-			<div className="flex justify-start">
-			  <div className="max-w-[88%] text-foreground px-3 py-2">
-				<div className="flex items-center gap-1.5">
-				  <Loader2 className="size-4 animate-spin text-muted-foreground" />
-				  <span className="text-sm text-muted-foreground">
-					Thinking...
-				  </span>
-				</div>
-			  </div>
-			</div>
-		  )}
 
 		  {error && (
 			<div className="flex justify-start">

@@ -2,7 +2,43 @@ import { model } from "./llm";
 import { researcherAgent } from "./subagents/researcherAgent";
 import { generatorAgent } from "./subagents/generatorAgent";
 import { webSearchAgent } from "./subagents/webSearchAgent";
-import { createAgent } from "langchain";
+import { createAgent, createMiddleware } from "langchain";
+import { z } from "zod";
+
+const responseFormat = z.object({
+  answer: z
+	.string()
+	.describe(
+	  "The final answer to the user's question, without any inline references, dates, source names, or URLs",
+	),
+  references: z
+	.array(
+	  z.object({
+		title: z.string().describe("Source title or document name"),
+		url: z
+		  .string()
+		  .optional()
+		  .describe("URL if available (web search results)"),
+		documentId: z
+		  .string()
+		  .optional()
+		  .describe("Document ID if from uploaded documents"),
+		pageNumber: z
+		  .number()
+		  .nullable()
+		  .optional()
+		  .describe("Page number in the document if available"),
+	  }),
+	)
+	.describe("List of source references used to generate the answer"),
+});
+
+const toolChoiceAuto = createMiddleware({
+  name: "toolChoiceAuto",
+  wrapModelCall: async (request, handler) => {
+	return handler({ ...request, toolChoice: "auto" });
+  },
+});
 
 const systemPrompt = `You are the ManagerAgent, the orchestrator of DocuMind's RAG system.
 You receive the user's question and projectId, then coordinate retrieval, validation, and generation.
@@ -13,22 +49,27 @@ You will receive a chat conversation history. The project ID is provided in the 
 >>> AVAILABLE TOOLS:
 - researcherAgent: retrieves from documents, reranks them, validates quality via grading, returns only valid chunks. Call with "query" and "projectId".
 - generatorAgent: generates the final answer from validated context. Call with "chunks" and "query". Returns a JSON string with {answer, references}.
-- searchQueryRewriter: rewrites a conversational query into clean search keywords. Call with "query". Returns a plain string (the rewritten query).
 - webSearchTool: searches the web for a query AND generates the final answer. Returns a JSON string with {answer, references}. Call with "query".
+
+>>> CRITICAL RULE — TOOL ORDER:
+You MUST call tools in this order. NEVER skip tools or call extract-* before calling a retrieval tool first.
+1. FIRST call researcherAgent (or webSearchTool)
+2. THEN call generatorAgent (or use webSearchTool's result)
+3. ONLY AFTER receiving tool results, produce your final structured answer
 
 >>> STEP 1 — CLASSIFY THE QUESTION into exactly ONE category:
 
-A) PERSONAL/CONVERSATIONAL — greetings, very basic conversation, opinions about yourself
-B) DOCUMENT QUESTION — asks about specific content from uploaded documents. Triggers: "my document", "my report", "in this paper", "my notes", "this document", "this paper", "this report", "this file", "the document", "the uploaded", "according to", "from the file", "what does the document say", "what is discussed in", "summarize this", "main topic of". Any question referring to a document the user is interacting with.
-C) RECENT/TIME-SENSITIVE OR REAL-WORLD TOPICS — current events, news, wars, conflicts, crises, geopolitics, elections, disasters, technology trends, market movements, sports results, anything involving countries/people/organizations in the news. Trigger words include: latest, recent, new, current, today, this year, released, happened, trending, war, conflict, crisis, attack, election, protest, sanctions, invasion, nuclear, AI, crypto, economy, stock, market, and any topic about real-world events involving named entities (countries, companies, people).
-D) GENERAL KNOWLEDGE — simple timeless facts with one definite answer (capital cities, math, definitions, historical facts with no real-world event context). No named entities from current events. No reference to any document.
+A) PERSONAL/CONVERSATIONAL — greetings, very basic conversation, opinions about yourself. ONLY greetings like "hi", "hello", "hey", or direct questions about DocuMind itself like "what is DocuMind", "who are you".
+B) DOCUMENT QUESTION — asks about specific content from uploaded documents. This is the DEFAULT category. Any question about a topic that could be covered by the uploaded documents counts here. Keywords like "what", "how", "why", "explain", "describe", "compare", "list", "summarize", "according to", "in the document", "from the file", etc. If a question COULD be answered by the uploaded documents, it is category B.
+C) RECENT/TIME-SENSITIVE OR REAL-WORLD TOPICS — current events, news, wars, conflicts, crises, geopolitics, elections, disasters, technology trends, market movements, sports results, anything involving countries/people/organizations in the news that would NOT be in an uploaded document.
+D) GENERAL KNOWLEDGE — simple timeless facts with one definite answer (capital cities, math, definitions, historical facts with no real-world event context) that would NOT be in an uploaded document.
 
 >>> STEP 2 — ROUTE based on category:
 
-  A) → DIRECT ANSWER (no tools) P
-  B) → DOCUMENT PATH
-  C) → WEB SEARCH PATH (ALWAYS, no exceptions)
-  D) → DIRECT ANSWER (no tools)
+A) → DIRECT ANSWER (no tools)
+B) → DOCUMENT PATH
+C) → WEB SEARCH PATH (ALWAYS, no exceptions)
+D) → DOCUMENT PATH first, then WEB SEARCH if document retrieval fails, then DIRECT ANSWER
 
 --- DOCUMENT PATH:
 1a. Call researcherAgent with the query and projectId from the input
@@ -37,71 +78,41 @@ D) GENERAL KNOWLEDGE — simple timeless facts with one definite answer (capital
 1d. If researcherAgent returns ANY error → fall back to WEB SEARCH PATH
 
 --- WEB SEARCH PATH:
-2a. Call searchQueryRewriter with the query to get a clean search query
-2b. Call webSearchTool with that rewritten query string
-2c. Return the webSearchTool's exact output as your final answer
+2a. Call webSearchTool with the original query directly
+2b. Use the answer and references from webSearchTool's JSON output for your structured response
 
 --- DIRECT ANSWER:
-- Answer directly. No tools. Keep concise. Only if the question is of category A 
+- Answer directly. No tools. Keep concise. Only for category A questions.
 
->>> EXAMPLES — study these carefully:
+>>> HOW TO BUILD YOUR STRUCTURED RESPONSE:
+Your final output MUST be structured with "answer" and "references" fields.
 
-Q: "Hi, how are you?"
-Category: A (PERSONAL) → DIRECT ANSWER
+When generatorAgent or webSearchTool returns a JSON string:
+1. Parse the JSON string from the tool output
+2. Copy the "answer" field EXACTLY as-is into your "answer" field. Do NOT rewrite, rephrase, add dates, add sources, or modify it in any way.
+3. Copy the "references" array EXACTLY as-is into your "references" field. Do NOT drop any fields (title, url, documentId, pageNumber).
+4. Do NOT add any text before or after. Do NOT wrap in quotes. Do NOT add markdown.
 
-Q: "What is the capital of USA?"
-Category: D (GENERAL KNOWLEDGE) → DIRECT ANSWER
-
-Q: "Tell me about the USA-IRAN War?"
-Category: C (REAL-WORLD — involves countries, war, conflict) → WEB SEARCH PATH
-
-Q: "What are the recent tech news about AI Security?"
-Category: C (RECENT — contains "recent") → WEB SEARCH PATH
-
-Q: "What is the latest AI model released by Anthropic?"
-Category: C (RECENT — contains "latest", "released") → WEB SEARCH PATH
-
-Q: "How is the economy doing right now?"
-Category: C (REAL-WORLD — economy, market) → WEB SEARCH PATH
-
-Q: "What happened in AI security this year?"
-Category: C (RECENT — contains "happened", "this year") → WEB SEARCH PATH
-
-Q: "Summarize the key findings from my research paper"
-Category: B (DOCUMENT — says "my research paper") → DOCUMENT PATH
-
-Q: "What does my report say about transformer architecture?"
-Category: B (DOCUMENT — says "my report") → DOCUMENT PATH
-
-Q: "What is the architecture discussed in this document?"
-Category: B (DOCUMENT — says "this document") → DOCUMENT PATH
-
-Q: "Summarize this paper"
-Category: B (DOCUMENT — says "this paper") → DOCUMENT PATH
-
-Q: "What is {any topic name}"
-Category: B and C (First search from the Documents -> DOCUMENT PATH if No data is found, then search the web -> WEB SEARCH PATH).  
+When answering directly (category A):
+- Put your answer in the "answer" field
+- Leave "references" as an empty array []
 
 >>> RULES:
-- ALWAYS AND MUST PRIORITIZE 1) DOCUMENT PATH even if it is a general question then 2) WEB SEARCH PATH and then at the end 3) GENERATE THE ANSWER YOURSELF if no relevant data is found from the documents and web.
-- NEVER answer from your own knowledge when the question is category B or C. You do not have reliable knowledge about current or real-world events, and always prioritize 
+- ALWAYS AND MUST PRIORITIZE DOCUMENT PATH first, even for general questions that could be covered by the uploaded documents.
+- NEVER answer from your own knowledge when the question is category B or C.
 - If document path fails, ALWAYS fall back to web search. Do NOT skip to direct answer.
 - If ALL tools fail or return errors, respond with: "I'm unable to find current information about this topic. Please try rephrasing your question."
-- Your FINAL response must be the EXACT output from generatorAgent or webSearchTool. Do NOT add any text before or after. Do NOT wrap it in quotes. Do NOT rephrase it. Just pass the raw output through.
 - DO NOT expose internal agent logic, scores, or workflow.
-- If user asks about your information, answer "I am DocuMind's AI Assistant. My job is to assist in interacting with your documents."
-- If user asks about this project, answer "DocuMind is RAG-based System for document interaction. It allows you to read, annotate, add notes, add shapes, etc to your documents while also allowing to use AI assistant side-by-side with your documents with references.
+- If user asks about your information, answer "I am DocuMind's AI Assistant."
+- If user asks about this project, answer "DocuMind is RAG-based System for document interaction."
 `;
 
-const tools = [
-  researcherAgent,
-  // searchQueryRewriterAgent,
-  webSearchAgent,
-  generatorAgent,
-];
+const tools = [researcherAgent, webSearchAgent, generatorAgent];
 
 export const managerAgent = createAgent({
   model,
   tools,
   systemPrompt,
+  responseFormat,
+  middleware: [toolChoiceAuto],
 });

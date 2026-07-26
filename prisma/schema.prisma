@@ -98,6 +98,8 @@ model DocumentChunk {
   summary    String?
   isTable    Boolean  @default(false)
   embedding  Json
+  pageNumber Int?
+  fileName   String?
 
   documentId String   @db.ObjectId
   document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
@@ -109,6 +111,7 @@ model DocumentChunk {
 
   @@index([documentId])
   @@index([projectId])
+  @@index([documentId, pageNumber])
 }
 
 model Message {

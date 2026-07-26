@@ -1,7 +1,6 @@
 import { createAgent, tool } from "langchain";
 import { z } from "zod";
 import { createModel } from "../llm";
-import { tracker } from "../tokenTracker";
 
 export const chunkSchema = z.object({
   id: z.string(),
@@ -98,7 +97,6 @@ export const graderAgent = tool(
 		},
 	  ],
 	});
-	tracker.track("graderAgent", result.messages);
 
 	const rawGrades = (result.structuredResponse as any)?.grades ?? [];
 	const grades = rawGrades.map((g: any) => ({

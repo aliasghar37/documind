@@ -293,6 +293,8 @@ export async function handleCreateProject(
 			embedding: batch.embedding,
 			documentId: document.id,
 			projectId: project.id,
+			fileName: document.fileName,
+			pageNumber: batch.pageNumber ?? null,
 		  }));
 		}),
 	  });

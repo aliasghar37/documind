@@ -3,7 +3,6 @@ import { z } from "zod";
 
 import { createAgent } from "langchain";
 import { createModel } from "./../llm";
-import { tracker } from "../tokenTracker";
 
 const responseFormat = z.object({
   queries: z
@@ -39,7 +38,6 @@ export const multiQueryAgent = tool(
 	const result = await agent.invoke({
 	  messages: [{ role: "user", content: query }],
 	});
-	tracker.track("multiQueryAgent", result.messages);
 	const queries = result.structuredResponse?.queries;
 	if (!queries?.length)
 	  return { success: false, message: "Failed to get queries" };

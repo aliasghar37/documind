@@ -25,4 +25,6 @@ export type Chunk = {
   vectorRank: number;
   textRank: number;
   relevanceScore?: number;
+  fileName?: string | null;
+  pageNumber?: number | null;
 };

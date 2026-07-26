@@ -4,7 +4,6 @@
 // import { z } from "zod";
 // import { graderAgent } from "./graderAgent";
 // import { retrieverAgent } from "./retrieverAgent";
-// import { tracker } from "../tokenTracker";
 // import "dotenv/config";
 
 // export const toolMonitoringMiddleware = createMiddleware({
@@ -159,7 +158,12 @@ export const researcherAgent = tool(
 	return validChunks.map((c) => ({
 	  content: c.isTable ? c.summary : c.content,
 	  score: c.relevanceScore,
-	  metadata: { documentId: c.documentId, isTable: c.isTable },
+	  metadata: {
+		documentId: c.documentId,
+		isTable: c.isTable,
+		fileName: c.fileName ?? null,
+		pageNumber: c.pageNumber ?? null,
+	  },
 	}));
 	} catch (err) {
 	  console.error("researcherAgent: UNEXPECTED ERROR:", err);
