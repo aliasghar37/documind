@@ -10,6 +10,7 @@ import { ChatInterface } from "./ChatInterface";
 import { ProjectWithDocuments } from "@/lib/data";
 import { ProjectMessage } from "@/app/actions/handleGetProjectMessages";
 import { useProjectHeader } from "@/components/project-header-context";
+import { useAnnotationSync } from "../hooks/useAnnotationSync";
 
 type Document = {
   id: string;
@@ -48,6 +49,8 @@ export default function CustomViewer({
 	  setProjectTitle(null);
 	};
   }, [project.title, setProjectTitle]);
+
+  useAnnotationSync(viewerRef, selectedDocument.id);
 
   const viewerConfig = useMemo(
 	() => ({
