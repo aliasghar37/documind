@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, isTextUIPart, type UIMessage } from "ai";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import Markdown from "react-markdown";
 import TextToSpeech from "./TextToSpeech";
 import SpeechToText from "./SpeechToText";
+import type { ProjectMessage } from "@/app/actions/handleGetProjectMessages";
 
 type ParsedResponse = {
   answer: string;
@@ -38,60 +39,98 @@ function getMessageText(message: UIMessage): string {
 	.join("");
 }
 
+function parseAiResponse(text: string): ParsedResponse {
+  try {
+	let cleaned = text.trim();
+	cleaned = cleaned
+	  .replace(/^```(?:json)?\s*\n?/i, "")
+	  .replace(/\n?```\s*$/i, "")
+	  .trim();
+	const jsonStart = cleaned.indexOf("{");
+	const jsonEnd = cleaned.lastIndexOf("}");
+	if (jsonStart !== -1 && jsonEnd > jsonStart) {
+	  let parsed = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1));
+	  if (typeof parsed.answer === "string") {
+		const inner = parsed.answer.trim();
+		if (inner.startsWith("{")) {
+		  try {
+			const nested = JSON.parse(inner);
+			if (nested.answer && Array.isArray(nested.references)) {
+			  parsed = nested;
+			}
+		  } catch {}
+		}
+	  }
+	  if (parsed.answer && Array.isArray(parsed.references)) {
+		return parsed;
+	  }
+	}
+  } catch {}
+  return { answer: text, references: [] };
+}
+
+function buildInitialParsedResponses(
+  messages: ProjectMessage[],
+): Map<string, ParsedResponse> {
+  const map = new Map<string, ParsedResponse>();
+  for (const m of messages) {
+	if (m.role === "AI") {
+	  map.set(m.id, parseAiResponse(m.content));
+	}
+  }
+  return map;
+}
+
+function dbMessagesToUIMessages(messages: ProjectMessage[]): UIMessage[] {
+  return messages.map((m) => ({
+	id: m.id,
+	role: m.role === "USER" ? ("user" as const) : ("assistant" as const),
+	parts: [{ type: "text" as const, text: m.content }],
+	createdAt: new Date(m.createdAt),
+  }));
+}
+
 export function ChatInterface({
   projectId,
   recommendationQns = [],
+  initialMessages = [],
 }: {
   projectId: string;
   recommendationQns?: string[];
+  initialMessages?: ProjectMessage[];
 }) {
+  const uiMessages = useMemo(
+	() => dbMessagesToUIMessages(initialMessages),
+	[initialMessages],
+  );
+  const initialParsed = useMemo(
+	() => buildInitialParsedResponses(initialMessages),
+	[initialMessages],
+  );
+
   const [parsedResponses, setParsedResponses] = useState<
 	Map<string, ParsedResponse>
-  >(new Map());
+  >(() => initialParsed);
   const [expandedRefs, setExpandedRefs] = useState<Set<string>>(new Set());
   const [input, setInput] = useState("");
-  const [questionsDismissed, setQuestionsDismissed] = useState(false);
+  const [questionsDismissed, setQuestionsDismissed] = useState(
+	initialMessages.length > 0,
+  );
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const MAX_LINES = 6;
 
   const { messages, sendMessage, status, error } = useChat({
 	id: projectId,
+	messages: uiMessages,
 	transport: new DefaultChatTransport({
 	  api: "/api/chat",
 	  body: { projectId },
 	}),
 	onFinish: ({ message }) => {
 	  const text = getMessageText(message);
-	  try {
-		let cleaned = text.trim();
-		cleaned = cleaned
-		  .replace(/^```(?:json)?\s*\n?/i, "")
-		  .replace(/\n?```\s*$/i, "")
-		  .trim();
-		const jsonStart = cleaned.indexOf("{");
-		const jsonEnd = cleaned.lastIndexOf("}");
-		if (jsonStart !== -1 && jsonEnd > jsonStart) {
-		  let parsed = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1));
-		  if (typeof parsed.answer === "string") {
-			const inner = parsed.answer.trim();
-			if (inner.startsWith("{")) {
-			  try {
-				const nested = JSON.parse(inner);
-				if (nested.answer && Array.isArray(nested.references)) {
-				  parsed = nested;
-				}
-			  } catch {}
-			}
-		  }
-		  if (parsed.answer && Array.isArray(parsed.references)) {
-			setParsedResponses((prev) => new Map(prev).set(message.id, parsed));
-			return;
-		  }
-		}
-	  } catch {}
-	  setParsedResponses((prev) =>
-		new Map(prev).set(message.id, { answer: text, references: [] }),
+	  setParsedResponses(
+		(prev) => new Map(prev).set(message.id, parseAiResponse(text)),
 	  );
 	},
   });
@@ -160,35 +199,7 @@ export function ChatInterface({
 		if (message.role !== "assistant" || next.has(message.id)) continue;
 		const text = getMessageText(message);
 		if (!text.trim()) continue;
-		try {
-		  let cleaned = text.trim();
-		  cleaned = cleaned
-			.replace(/^```(?:json)?\s*\n?/i, "")
-			.replace(/\n?```\s*$/i, "")
-			.trim();
-		  const jsonStart = cleaned.indexOf("{");
-		  const jsonEnd = cleaned.lastIndexOf("}");
-		  if (jsonStart !== -1 && jsonEnd > jsonStart) {
-			let parsed = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1));
-			if (typeof parsed.answer === "string") {
-			  const inner = parsed.answer.trim();
-			  if (inner.startsWith("{")) {
-				try {
-				  const nested = JSON.parse(inner);
-				  if (nested.answer && Array.isArray(nested.references)) {
-					parsed = nested;
-				  }
-				} catch {}
-			  }
-			}
-			if (parsed.answer && Array.isArray(parsed.references)) {
-			  next.set(message.id, parsed);
-			  changed = true;
-			  continue;
-			}
-		  }
-		} catch {}
-		next.set(message.id, { answer: text, references: [] });
+		next.set(message.id, parseAiResponse(text));
 		changed = true;
 	  }
 	  return changed ? next : prev;

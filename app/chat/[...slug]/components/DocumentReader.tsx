@@ -8,6 +8,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChatInterface } from "./ChatInterface";
 import { ProjectWithDocuments } from "@/lib/data";
+import { ProjectMessage } from "@/app/actions/handleGetProjectMessages";
 import { useProjectHeader } from "@/components/project-header-context";
 
 type Document = {
@@ -25,8 +26,10 @@ type Document = {
 
 export default function CustomViewer({
   project,
+  initialMessages,
 }: {
   project: ProjectWithDocuments;
+  initialMessages?: ProjectMessage[];
 }) {
   const documents = project.documents;
   const { setProjectTitle } = useProjectHeader();
@@ -157,7 +160,6 @@ export default function CustomViewer({
 	  toolbars: { "main-toolbar": { ...toolbar, items } },
 	});
 
-	// remove only rotation-related entries
 	try {
 	  const full = ui.getSchema();
 
@@ -257,6 +259,7 @@ export default function CustomViewer({
 		  recommendationQns={project.recommendationQns.map(
 			(q) => q.questionText,
 		  )}
+		  initialMessages={initialMessages}
 		/>
 	  </aside>
 	</div>

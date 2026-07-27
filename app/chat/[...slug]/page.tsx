@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import DocumentReader from "./components/DocumentReader";
 import { handleGetProject } from "@/app/actions/handleGetProject";
+import { handleGetProjectMessages } from "@/app/actions/handleGetProjectMessages";
 import { ProjectWithDocuments } from "@/lib/data";
 
 export default async function Page({
@@ -20,5 +21,6 @@ export default async function Page({
   }
 
   const project: ProjectWithDocuments = result;
-  return <DocumentReader project={project} />;
+  const messages = await handleGetProjectMessages(projectId);
+  return <DocumentReader project={project} initialMessages={messages} />;
 }
