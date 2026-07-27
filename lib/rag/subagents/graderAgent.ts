@@ -28,7 +28,7 @@ const responseFormat = z.object({
 		.min(0)
 		.max(100)
 		.describe("Score for this chunk"),
-	  isValid: z.boolean().describe("Passes threshold (>= 70)"),
+	  isValid: z.boolean().describe("Passes threshold (>= 50)"),
 	  reasoning: z.string().describe("Why this score (in short)"),
 	}),
   ),
@@ -101,7 +101,7 @@ export const graderAgent = tool(
 	const rawGrades = (result.structuredResponse as any)?.grades ?? [];
 	const grades = rawGrades.map((g: any) => ({
 	  ...g,
-	  isValid: (g.confidenceScore ?? 0) >= 70,
+	  isValid: (g.confidenceScore ?? 0) >= 50,
 	}));
 	return { grades };
   },

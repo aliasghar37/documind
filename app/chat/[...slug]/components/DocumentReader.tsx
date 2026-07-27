@@ -252,7 +252,12 @@ export default function CustomViewer({
 	  </div>
 
 	  <aside className="min-h-0 lg:col-span-1">
-		<ChatInterface projectId={project.id} />
+		<ChatInterface
+		  projectId={project.id}
+		  recommendationQns={project.recommendationQns.map(
+			(q) => q.questionText,
+		  )}
+		/>
 	  </aside>
 	</div>
   );

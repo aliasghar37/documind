@@ -30,6 +30,7 @@ export async function handleGetProject(
 	where: { id: projectId, userId: dbUser.id },
 	include: {
 	  documents: true,
+	  recommendationQns: true,
 	},
   });
   if (!project) return { success: false, message: "Project not found." };

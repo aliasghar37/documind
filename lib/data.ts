@@ -10,7 +10,7 @@ export const projectCategories = [
 export type ProjectCategoryType = (typeof projectCategories)[number];
 
 export type ProjectWithDocuments = Prisma.ProjectGetPayload<{
-  include: { documents: true };
+  include: { documents: true; recommendationQns: true };
 }>;
 
 export type Chunk = {

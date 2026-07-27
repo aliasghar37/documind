@@ -5,7 +5,16 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, isTextUIPart, type UIMessage } from "ai";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Copy, Send, Loader2, Globe, FileText, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Copy,
+  Send,
+  Loader2,
+  Globe,
+  FileText,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import Markdown from "react-markdown";
@@ -14,7 +23,12 @@ import SpeechToText from "./SpeechToText";
 
 type ParsedResponse = {
   answer: string;
-  references: { title: string; url?: string; documentId?: string; pageNumber?: number | null }[];
+  references: {
+	title: string;
+	url?: string;
+	documentId?: string;
+	pageNumber?: number | null;
+  }[];
 };
 
 function getMessageText(message: UIMessage): string {
@@ -24,12 +38,19 @@ function getMessageText(message: UIMessage): string {
 	.join("");
 }
 
-export function ChatInterface({ projectId }: { projectId: string }) {
+export function ChatInterface({
+  projectId,
+  recommendationQns = [],
+}: {
+  projectId: string;
+  recommendationQns?: string[];
+}) {
   const [parsedResponses, setParsedResponses] = useState<
 	Map<string, ParsedResponse>
   >(new Map());
   const [expandedRefs, setExpandedRefs] = useState<Set<string>>(new Set());
   const [input, setInput] = useState("");
+  const [questionsDismissed, setQuestionsDismissed] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const MAX_LINES = 6;
@@ -44,7 +65,10 @@ export function ChatInterface({ projectId }: { projectId: string }) {
 	  const text = getMessageText(message);
 	  try {
 		let cleaned = text.trim();
-		cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+		cleaned = cleaned
+		  .replace(/^```(?:json)?\s*\n?/i, "")
+		  .replace(/\n?```\s*$/i, "")
+		  .trim();
 		const jsonStart = cleaned.indexOf("{");
 		const jsonEnd = cleaned.lastIndexOf("}");
 		if (jsonStart !== -1 && jsonEnd > jsonStart) {
@@ -138,7 +162,10 @@ export function ChatInterface({ projectId }: { projectId: string }) {
 		if (!text.trim()) continue;
 		try {
 		  let cleaned = text.trim();
-		  cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+		  cleaned = cleaned
+			.replace(/^```(?:json)?\s*\n?/i, "")
+			.replace(/\n?```\s*$/i, "")
+			.trim();
 		  const jsonStart = cleaned.indexOf("{");
 		  const jsonEnd = cleaned.lastIndexOf("}");
 		  if (jsonStart !== -1 && jsonEnd > jsonStart) {
@@ -188,6 +215,27 @@ export function ChatInterface({ projectId }: { projectId: string }) {
 		className="flex-1 min-h-0 overflow-y-auto chat-scrollbar bg-background px-4 py-4"
 	  >
 		<div className="space-y-4">
+		  {messages.length === 0 &&
+			!questionsDismissed &&
+			recommendationQns.length > 0 && (
+			  <div className="flex flex-col items-end justify-center py-0 text-center">
+				<div className="flex w-full max-w-md flex-col gap-2">
+				  {recommendationQns.map((q) => (
+					<button
+					  key={q}
+					  type="button"
+					  onClick={() => {
+						setQuestionsDismissed(true);
+						sendMessage({ text: q });
+					  }}
+					  className="w-full rounded-xl border border-border bg-card px-4 py-3 text-left text-sm text-foreground transition-colors hover:bg-muted hover:text-primary"
+					>
+					  {q}
+					</button>
+				  ))}
+				</div>
+			  </div>
+			)}
 		  {messages.map((message) => (
 			<div
 			  key={message.id}
@@ -221,11 +269,16 @@ export function ChatInterface({ projectId }: { projectId: string }) {
 					const refsExpanded = expandedRefs.has(message.id);
 
 					if (!isComplete) {
-					  if (message.id === lastMessage?.id && isStreamingLastMessage) {
+					  if (
+						message.id === lastMessage?.id &&
+						isStreamingLastMessage
+					  ) {
 						return (
 						  <div className="flex items-center gap-1.5 py-1">
 							<Loader2 className="size-4 animate-spin text-muted-foreground" />
-							<span className="text-sm text-muted-foreground">Thinking...</span>
+							<span className="text-sm text-muted-foreground">
+							  Thinking...
+							</span>
 						  </div>
 						);
 					  }
@@ -283,7 +336,7 @@ export function ChatInterface({ projectId }: { projectId: string }) {
 							{refs.map((ref, i) => {
 							  const icon = ref.url ? (
 								<Globe className="size-3.5 shrink-0" />
-							  ) : (ref.documentId || ref.pageNumber) ? (
+							  ) : ref.documentId || ref.pageNumber ? (
 								<FileText className="size-3.5 shrink-0" />
 							  ) : (
 								<Sparkles className="size-3.5 shrink-0" />
