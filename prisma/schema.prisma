@@ -47,6 +47,8 @@ model User {
   projects     Project[]
   documents    Document[]
   annotations Annotation[]
+  messages     Message[]
+  summaries    ConversationSummary[]
 }
 
 model Project {
@@ -64,6 +66,7 @@ model Project {
   documentCount   Int           @default(0)
   documents       Document[]
   messages        Message[]
+  summaries       ConversationSummary[]
   recommendationQns   RecommendedQuestion[]
   documentChunks    DocumentChunk[]
   annotations Annotation[]
@@ -115,14 +118,21 @@ model DocumentChunk {
 }
 
 model Message {
-  id         String      @id @default(auto()) @map("_id") @db.ObjectId
-  role       MessageRole
-  content    String
-  citations  Json?       
-  createdAt  DateTime    @default(now())
+  id             String      @id @default(auto()) @map("_id") @db.ObjectId
+  role           MessageRole
+  content        String
+  citations      Json?
+  messageNumber  Int
+  createdAt      DateTime    @default(now())
 
-  projectId  String      @db.ObjectId
-  project    Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId      String      @db.ObjectId
+  project        Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  userId         String      @db.ObjectId
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+  @@index([userId, projectId])
 }
 
 model RecommendedQuestion {
@@ -186,4 +196,20 @@ model Annotation {
   @@index([documentId])
   @@index([userId])
   @@index([documentId, pageNumber])
+}
+
+model ConversationSummary {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  summary           String
+  lastMessageNumber Int
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  userId            String   @db.ObjectId
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  projectId         String   @db.ObjectId
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
 }

@@ -4,12 +4,24 @@ import { managerAgent } from "@/lib/rag/managerAgent";
 import { HumanMessage, AIMessage, SystemMessage, BaseMessage } from "@langchain/core/messages";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { fetchMessages, saveMessage } from "@/lib/chatUtils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function isValidObjectId(id: string) {
   return /^[a-fA-F0-9]{24}$/.test(id);
+}
+
+function extractText(message: any): string {
+  if (typeof message.content === "string") return message.content;
+  if (Array.isArray(message.parts)) {
+	return message.parts
+	  .filter((p: any) => p?.type === "text" && typeof p.text === "string")
+	  .map((p: any) => p.text)
+	  .join("");
+  }
+  return "";
 }
 
 export async function POST(req: Request) {
@@ -48,22 +60,25 @@ export async function POST(req: Request) {
   };
   const categoryLabel = CATEGORY_DISPLAY[project.projectCategory] ?? "General Purpose";
 
+  const lastClientMessage = Array.isArray(messages) ? messages[messages.length - 1] : null;
+  const userText = lastClientMessage ? extractText(lastClientMessage) : "";
+  if (!userText.trim()) {
+	return new Response("Empty message", { status: 400 });
+  }
+
+  await saveMessage(dbUser.id, projectId, "USER", userText);
+
+  const dbContext = await fetchMessages(dbUser.id, projectId);
+
   const langchainMessages: BaseMessage[] = [];
-  if (Array.isArray(messages)) {
-	for (const m of messages as any[]) {
-	  const text =
-		typeof m.content === "string"
-		  ? m.content
-		  : Array.isArray(m.parts)
-			? m.parts
-				.filter((p: any) => p?.type === "text" && typeof p.text === "string")
-				.map((p: any) => p.text)
-				.join("")
-			: "";
-	  if (!text.trim()) continue;
-	  langchainMessages.push(
-		m.role === "user" ? new HumanMessage(text) : new AIMessage(text),
-	  );
+  for (const msg of dbContext) {
+	if (!msg.content.trim()) continue;
+	if (msg.role === "system") {
+	  langchainMessages.push(new SystemMessage(msg.content));
+	} else if (msg.role === "user") {
+	  langchainMessages.push(new HumanMessage(msg.content));
+	} else {
+	  langchainMessages.push(new AIMessage(msg.content));
 	}
   }
 
@@ -72,7 +87,7 @@ export async function POST(req: Request) {
 	  `Context: Project ID "${projectId}", Category: "${categoryLabel}". ` +
 		`When calling researcherAgent, always pass this projectId. ` +
 		`When calling generatorAgent, always pass the Category as the "category" parameter. ` +
-		`The user's question is in the last message.`,
+		`The user's question is in the last HumanMessage above.`,
 	),
   );
 
@@ -103,6 +118,14 @@ export async function POST(req: Request) {
 	  }
 
 	  if (state.structuredResponse) {
+		await saveMessage(
+		  dbUser.id,
+		  projectId,
+		  "AI",
+		  state.structuredResponse.answer,
+		  state.structuredResponse.references,
+		);
+
 		const text = JSON.stringify(state.structuredResponse);
 		writer.write({ type: "text-start", id: "structured-answer" });
 		writer.write({ type: "text-delta", delta: text, id: "structured-answer" });
