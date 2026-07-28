@@ -39,13 +39,12 @@ export default function ShowDocuments({
 
 		<Card>
 		  <CardContent>
-			<Table>
+			<Table >
 			  <TableHeader>
 				<TableRow>
 				  <TableHead className="text-lg">Document</TableHead>
 				  <TableHead className="text-lg">Project</TableHead>
 				  <TableHead className="text-lg">Updated</TableHead>
-				  <TableHead className="text-lg">Status</TableHead>
 				</TableRow>
 			  </TableHeader>
 			  <TableBody>
@@ -57,9 +56,6 @@ export default function ShowDocuments({
 					</TableCell>
 					<TableCell className="text-base">
 					  {formatDate(doc.updatedAt)}
-					</TableCell>
-					<TableCell className="text-base">
-					  {"Add Status later"}
 					</TableCell>
 					<TableCell className="text-base">
 					  <DeleteDocument documentId={doc.id} />

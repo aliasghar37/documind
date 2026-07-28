@@ -2,9 +2,11 @@ import { toUIMessageStream } from "@ai-sdk/langchain";
 import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 import { managerAgent } from "@/lib/rag/managerAgent";
 import { HumanMessage, AIMessage, SystemMessage, BaseMessage } from "@langchain/core/messages";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { fetchMessages, saveMessage } from "@/lib/chatUtils";
+import { checkAndUpsertUsage, getUsage, addUsage } from "@/lib/usage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,6 +24,20 @@ function extractText(message: any): string {
 	  .join("");
   }
   return "";
+}
+
+class TokenTracker extends BaseCallbackHandler {
+  name = "token_tracker";
+  input = 0;
+  output = 0;
+
+  handleLLMEnd(output: { llmOutput?: { tokenUsage?: { promptTokens?: number; completionTokens?: number } } }) {
+	const usage = output.llmOutput?.tokenUsage;
+	if (usage) {
+	  this.input += usage.promptTokens ?? 0;
+	  this.output += usage.completionTokens ?? 0;
+	}
+  }
 }
 
 export async function POST(req: Request) {
@@ -42,6 +58,18 @@ export async function POST(req: Request) {
   });
   if (!dbUser) {
 	return new Response("User not found", { status: 401 });
+  }
+
+  const usage = await checkAndUpsertUsage(dbUser.id);
+  if (!usage || usage.totalTokens >= usage.limit) {
+	const resetDate = (await getUsage(dbUser.id))?.periodEnd;
+	return Response.json(
+	  {
+		error: "limit_reached",
+		resetAt: resetDate?.toISOString() ?? null,
+	  },
+	  { status: 429 },
+	);
   }
 
   const project = await prisma.project.findFirst({
@@ -91,48 +119,56 @@ export async function POST(req: Request) {
 	),
   );
 
+  const tracker = new TokenTracker();
+
   const graphStream = await managerAgent.stream(
 	{ messages: langchainMessages },
-	{ streamMode: ["messages", "values"] },
+	{ streamMode: ["messages", "values"], callbacks: [tracker] },
   );
 
-  const stream = createUIMessageStream({
-	execute: async ({ writer }) => {
-	  const state: { structuredResponse?: { answer: string; references: any[] } } = {};
+	const stream = createUIMessageStream({
+	  execute: async ({ writer }) => {
+		const state: { structuredResponse?: { answer: string; references: any[] } } = {};
 
-	  const innerStream = toUIMessageStream<{
-		structuredResponse?: { answer: string; references: any[] };
-	  }>(graphStream, {
-		onFinish: async (finalState) => {
-		  if (finalState?.structuredResponse) {
-			state.structuredResponse = finalState.structuredResponse;
+		const innerStream = toUIMessageStream<{
+		  structuredResponse?: { answer: string; references: any[] };
+		}>(graphStream, {
+		  onFinish: async (finalState) => {
+			if (finalState?.structuredResponse) {
+			  state.structuredResponse = finalState.structuredResponse;
+			}
+		  },
+		});
+
+		const reader = innerStream.getReader();
+		while (true) {
+		  const { done, value } = await reader.read();
+		  if (done) break;
+		  writer.write(value);
+		}
+
+		if (state.structuredResponse) {
+		  await saveMessage(
+			dbUser.id,
+			projectId,
+			"AI",
+			state.structuredResponse.answer,
+			state.structuredResponse.references,
+		  );
+
+		  const input = tracker.input;
+		  const output = tracker.output;
+		  if (input > 0 || output > 0) {
+			await addUsage(dbUser.id, input, output);
 		  }
-		},
-	  });
 
-	  const reader = innerStream.getReader();
-	  while (true) {
-		const { done, value } = await reader.read();
-		if (done) break;
-		writer.write(value);
-	  }
-
-	  if (state.structuredResponse) {
-		await saveMessage(
-		  dbUser.id,
-		  projectId,
-		  "AI",
-		  state.structuredResponse.answer,
-		  state.structuredResponse.references,
-		);
-
-		const text = JSON.stringify(state.structuredResponse);
-		writer.write({ type: "text-start", id: "structured-answer" });
-		writer.write({ type: "text-delta", delta: text, id: "structured-answer" });
-		writer.write({ type: "text-end", id: "structured-answer" });
-	  }
-	},
-  });
+		  const text = JSON.stringify(state.structuredResponse);
+		  writer.write({ type: "text-start", id: "structured-answer" });
+		  writer.write({ type: "text-delta", delta: text, id: "structured-answer" });
+		  writer.write({ type: "text-end", id: "structured-answer" });
+		}
+	  },
+	});
 
   return createUIMessageStreamResponse({ stream });
 }

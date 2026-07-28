@@ -135,6 +135,34 @@ export function ChatInterface({
 	},
   });
 
+  const isLimitReached = error?.message?.includes?.("limit_reached") ?? false;
+  const limitResetAt = isLimitReached
+	? (() => {
+		try {
+		  const msg = error?.message ?? "";
+		  const parsed = JSON.parse(
+			msg.substring(
+			  msg.indexOf("{"),
+			  msg.lastIndexOf("}") + 1,
+			),
+		  );
+		  return parsed.resetAt ? new Date(parsed.resetAt).toLocaleDateString() : null;
+		} catch {
+		  return null;
+		}
+	  })()
+	: null;
+
+  useEffect(() => {
+	if (isLimitReached) {
+	  toast.error(
+		limitResetAt
+		  ? `Monthly token limit reached. Resets on ${limitResetAt}.`
+		  : "Monthly token limit reached.",
+	  );
+	}
+  }, [isLimitReached, limitResetAt]);
+
   const isLoading = status === "submitted" || status === "streaming";
 
   const copyMessage = async (text: string) => {
@@ -163,7 +191,7 @@ export function ChatInterface({
 
   const doSubmit = () => {
 	const trimmed = input.trim();
-	if (!trimmed || isLoading) return;
+	if (!trimmed || isLoading || isLimitReached) return;
 	sendMessage({ text: trimmed });
 	setInput("");
 	const el = textareaRef.current;

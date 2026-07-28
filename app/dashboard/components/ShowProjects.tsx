@@ -17,6 +17,15 @@ import { CreateNewProject } from "./NewProject";
 import { formatDate } from "@/lib/dateFormatter";
 import { UpdateProject } from "./UpdateProject";
 import type { ProjectCategoryType } from "@/lib/data";
+import { toast } from "sonner";
+
+type UsageData = {
+  role: "FREE" | "PRO";
+  totalTokens: number;
+  limit: number;
+  remaining: number;
+  periodEnd: string | null;
+};
 
 const getProjectCategoryLabel = (
   projectCategoryRaw: string,
@@ -56,20 +65,48 @@ export default function ShowProjects({
   totalProjects?: number;
 }) {
   const [badgeIndex, setBadgeIndex] = useState(0);
+  const [usage, setUsage] = useState<UsageData | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleUpgrade = async () => {
+	setLoading(true);
+	try {
+	  const res = await fetch("/api/usage/upgrade", { method: "POST" });
+	  if (res.ok) {
+		toast.success("You've been upgraded to Pro!");
+		setTimeout(() => window.location.reload(), 1000);
+	  } else {
+		toast.error("Upgrade failed.");
+	  }
+	} catch {
+	  toast.error("Upgrade failed.");
+	} finally {
+	  setLoading(false);
+	}
+  };
+
   useEffect(() => {
 	setBadgeIndex(Math.floor(Math.random() * badgePalette.length));
+	fetch("/api/usage")
+	  .then((r) => (r.ok ? r.json() : null))
+	  .then((data) => setUsage(data))
+	  .catch(() => {});
   }, []);
 
   const projects = initialProjects ?? [];
 
   const metricesData = useMemo(() => {
+	const tokenDisplay = usage
+	  ? `${usage.totalTokens.toLocaleString()} / ${usage.limit.toLocaleString()}`
+	  : "—";
+	const roleLabel = usage?.role === "PRO" ? "Pro" : "Free";
 	return [
-	  { title: 4885, description: "Token Usage" },
+	  { title: tokenDisplay, description: "Token Usage" },
 	  { title: totalProjects, description: "Total Projects" },
 	  { title: totalDocuments, description: "Total Documents" },
-	  { title: "Free", description: "User Type" },
+	  { title: roleLabel, description: "" },
 	];
-  }, [totalDocuments, totalProjects]);
+  }, [totalDocuments, totalProjects, usage]);
 
   const projectsWithDocCounts = useMemo(() => {
 	return projects.map((project) => ({
@@ -79,37 +116,49 @@ export default function ShowProjects({
 	}));
   }, [projects, documents]);
 
-  const projectSettings = (project: any) => {
-	try {
-	  return typeof project.projectSettings === "string"
-		? JSON.parse(project.projectSettings)
-		: {};
-	} catch (e) {
-	  return {};
-	}
-  };
-
   return (
 	<>
 	  {page === "overview" ? (
-		<div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
-		  {metricesData.map((data) => (
-			<Card
-			  key={data.description}
-			  size="default"
-			  className="mx-auto w-full max-w-sm"
-			>
-			  <CardHeader>
-				<CardTitle className="text-2xl text-foreground">
-				  {data.title}
-				</CardTitle>
-				<CardDescription className="text-lg">
-				  {data.description}
-				</CardDescription>
-			  </CardHeader>
-			</Card>
-		  ))}
-		</div>
+		<>
+		  <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
+			{metricesData.map((data) => (
+			  <Card
+				key={data.description}
+				size="default"
+				className="mx-auto w-full max-w-sm"
+			  >
+				<CardHeader>
+				  <CardTitle className="text-2xl text-foreground">
+					{data.title}
+					{data.description === "" ? (
+					  <span className="text-sm text-accent ">&nbsp;Plan</span>
+					) : (
+					  ""
+					)}
+				  </CardTitle>
+				  <CardDescription className="text-lg">
+					{data.description}
+				  </CardDescription>
+				  {data.title === "Free" ? (
+					<CardContent className="p-0 text-accent text-base ">
+					  <Button
+						onClick={handleUpgrade}
+						disabled={loading}
+						className="w-fit p-0 "
+						variant={"link"}
+					  >
+						{loading ? "Upgrading..." : "Upgrade to Pro"}
+					  </Button>
+					  &nbsp;& unlock 1M Tokens/month
+					</CardContent>
+				  ) : (
+					""
+				  )}
+				</CardHeader>
+			  </Card>
+			))}
+		  </div>
+		</>
 	  ) : (
 		""
 	  )}
@@ -185,14 +234,6 @@ export default function ShowProjects({
 			</CardContent>
 
 			<CardFooter className="mt-auto flex justify-center gap-2 bg-card">
-			  <Button
-				asChild
-				variant="outline"
-				size="default"
-				className="w-1/2 bg-primary text-background"
-			  >
-				<Link href={`/chat/${project.id}`}>Open Project</Link>
-			  </Button>
 			  <UpdateProject
 				projectId={project.id}
 				oldTitle={project.title}
@@ -201,11 +242,18 @@ export default function ShowProjects({
 				  documents?.filter((doc) => doc.projectId === project.id) ??
 				  null
 				}
-				oldIsWebSearch={Boolean(projectSettings(project).webSearch)}
 				oldProjectCategory={getProjectCategoryLabel(
 				  project.projectCategory,
 				)}
 			  />
+			  <Button
+				asChild
+				variant="outline"
+				size="default"
+				className="w-1/2 bg-primary text-background"
+			  >
+				<Link href={`/chat/${project.id}`}>Open Project</Link>
+			  </Button>
 			</CardFooter>
 		  </Card>
 		))}
@@ -213,3 +261,24 @@ export default function ShowProjects({
 	</>
   );
 }
+
+// function UpgradeCard() {
+//   return (
+//     <Card
+//       size="default"
+//       className="mx-auto w-full max-w-sm border-dashed border-primary/50"
+//     >
+//       <CardHeader>
+//         <CardTitle className="text-2xl text-primary">Upgrade</CardTitle>
+//         <CardDescription className="text-lg">
+//           Unlock 10M tokens/month
+//         </CardDescription>
+//       </CardHeader>
+//       <CardContent>
+//         <Button onClick={handleUpgrade} disabled={loading} className="w-full">
+//           {loading ? "Upgrading..." : "Upgrade to Pro"}
+//         </Button>
+//       </CardContent>
+//     </Card>
+//   );
+// }
