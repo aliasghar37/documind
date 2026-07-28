@@ -13,16 +13,39 @@ export async function POST(request: NextRequest) {
 	  console.log(first_name, last_name, email_addresses, image_url);
 	  console.log("dataaa:", event.data);
 
-	  await prisma.user.create({
-		data: {
-		  clerkUserId: id as string,
-		  email: email_addresses[0].email_address,
-		  firstName: first_name as string,
-		  lastName: last_name as string,
-		  imageUrl: image_url,
-		  role: "FREE",
-		},
+	  let user = await prisma.user.findUnique({
+		where: { clerkUserId: id as string },
 	  });
+
+	  if (!user) {
+		user = await prisma.user.findUnique({
+		  where: { email: email_addresses[0].email_address },
+		});
+	  }
+
+	  if (user) {
+		await prisma.user.update({
+		  where: { id: user.id },
+		  data: {
+			clerkUserId: id as string,
+			email: email_addresses[0].email_address,
+			firstName: first_name as string,
+			lastName: last_name as string,
+			imageUrl: image_url,
+		  },
+		});
+	  } else {
+		await prisma.user.create({
+		  data: {
+			clerkUserId: id as string,
+			email: email_addresses[0].email_address,
+			firstName: first_name as string,
+			lastName: last_name as string,
+			imageUrl: image_url,
+			role: "FREE",
+		  },
+		});
+	  }
 	  try {
 		const client = await clerkClient();
 		await client.users.updateUser(id as string, {

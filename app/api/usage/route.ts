@@ -2,11 +2,15 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { getUsage } from "@/lib/usage";
+import { success } from "zod";
 
 export async function GET() {
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) {
-	return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+	return NextResponse.json(
+	  { success: false, message: "Unauthenticated" },
+	  { status: 401 },
+	);
   }
 
   const dbUser = await prisma.user.findUnique({
@@ -14,10 +18,13 @@ export async function GET() {
 	select: { id: true },
   });
   if (!dbUser) {
-	return NextResponse.json({ error: "User not found" }, { status: 401 });
+	return NextResponse.json(
+	  { success: false, message: "User not found" },
+	  { status: 401 },
+	);
   }
 
   const usage = await getUsage(dbUser.id);
 
-  return NextResponse.json(usage);
+  return NextResponse.json({ success: true, data: usage });
 }

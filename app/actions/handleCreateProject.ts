@@ -10,6 +10,7 @@ import "dotenv/config";
 import { documentIngestion } from "@/lib/documentIngestion";
 import { Prisma } from "@/generated/prisma/client";
 import type { IndexedBatch, DocumentMetadata } from "@/lib/documentIngestion";
+import { TIER_LIMITS } from "@/lib/data";
 
 const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET;
 
@@ -55,7 +56,7 @@ export async function handleCreateProject(
 
   const dbUser = await prisma.user.findUnique({
 	where: { clerkUserId },
-	select: { id: true },
+	select: { id: true, role: true, projectsCount: true },
   });
 
   if (!dbUser || !isValidObjectId(dbUser.id)) {
@@ -115,6 +116,15 @@ export async function handleCreateProject(
 		message: `File ${file.name} exceeds 5 MB.`,
 	  };
 	}
+  }
+
+  const role = dbUser.role ?? "FREE";
+  const maxProjects = TIER_LIMITS[role].maxProjects;
+  if (dbUser.projectsCount >= maxProjects) {
+	return {
+	  success: false,
+	  message: `You've reached the maximum of ${maxProjects} projects on your current plan. Upgrade to PRO to create up to ${TIER_LIMITS.PRO.maxProjects} projects.`,
+	};
   }
 
   const uploadedPaths: string[] = [];

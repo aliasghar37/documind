@@ -1,5 +1,5 @@
 import { prisma } from "./prisma";
-import { TIER_LIMITS } from "./limits";
+import { TIER_LIMITS } from "./data";
 
 export async function checkAndUpsertUsage(userId: string) {
   const user = await prisma.user.findUnique({
@@ -15,9 +15,11 @@ export async function checkAndUpsertUsage(userId: string) {
 
   const needsReset = !user.periodEnd || new Date() > user.periodEnd;
 
+  const role = user.role ?? "FREE";
+
   if (needsReset) {
 	const now = new Date();
-	const periodDays = TIER_LIMITS[user.role].periodDays;
+	const periodDays = TIER_LIMITS[role].periodDays;
 	const periodEnd = new Date(now.getTime() + periodDays * 86400000);
 
 	await prisma.user.update({
@@ -29,12 +31,15 @@ export async function checkAndUpsertUsage(userId: string) {
 	  },
 	});
 
-	return { totalTokens: 0, limit: TIER_LIMITS[user.role].maxTokens };
+	return {
+	  totalTokens: 0,
+	  limit: TIER_LIMITS[role].maxTokens,
+	};
   }
 
   return {
-	totalTokens: user.totalTokens,
-	limit: TIER_LIMITS[user.role].maxTokens,
+	totalTokens: user.totalTokens ?? 0,
+	limit: TIER_LIMITS[role].maxTokens,
   };
 }
 
@@ -50,12 +55,14 @@ export async function getUsage(userId: string) {
   });
   if (!user) return null;
 
-  const limit = TIER_LIMITS[user.role].maxTokens;
-  const remaining = Math.max(0, limit - user.totalTokens);
+  const role = user.role ?? "FREE";
+  const limit = TIER_LIMITS[role].maxTokens;
+  const tokens = user.totalTokens ?? 0;
+  const remaining = Math.max(0, limit - tokens);
 
   return {
-	role: user.role,
-	totalTokens: user.totalTokens,
+	role,
+	totalTokens: tokens,
 	limit,
 	remaining,
 	periodStart: user.periodStart,

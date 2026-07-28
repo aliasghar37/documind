@@ -89,7 +89,7 @@ export default function ShowProjects({
 	setBadgeIndex(Math.floor(Math.random() * badgePalette.length));
 	fetch("/api/usage")
 	  .then((r) => (r.ok ? r.json() : null))
-	  .then((data) => setUsage(data))
+	  .then((data) => setUsage(data?.data ?? null))
 	  .catch(() => {});
   }, []);
 
@@ -97,7 +97,7 @@ export default function ShowProjects({
 
   const metricesData = useMemo(() => {
 	const tokenDisplay = usage
-	  ? `${usage.totalTokens.toLocaleString()} / ${usage.limit.toLocaleString()}`
+	  ? `${(usage.totalTokens ?? 0).toLocaleString()} / ${(usage.limit ?? 0).toLocaleString()}`
 	  : "—";
 	const roleLabel = usage?.role === "PRO" ? "Pro" : "Free";
 	return [

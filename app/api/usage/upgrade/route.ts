@@ -5,7 +5,10 @@ import { prisma } from "@/lib/prisma";
 export async function POST() {
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) {
-	return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+	return NextResponse.json(
+	  { success: true, message: "Unauthenticated" },
+	  { status: 401 },
+	);
   }
 
   const dbUser = await prisma.user.findUnique({
@@ -13,11 +16,14 @@ export async function POST() {
 	select: { id: true, role: true },
   });
   if (!dbUser) {
-	return NextResponse.json({ error: "User not found" }, { status: 401 });
+	return NextResponse.json(
+	  { success: true, message: "User not found" },
+	  { status: 401 },
+	);
   }
 
   if (dbUser.role === "PRO") {
-	return NextResponse.json({ message: "Already Pro" });
+	return NextResponse.json({ success: false, message: "Already Pro" });
   }
 
   await prisma.user.update({
@@ -25,5 +31,8 @@ export async function POST() {
 	data: { role: "PRO" },
   });
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({
+	success: true,
+	message: "Account upgraded successfully",
+  });
 }

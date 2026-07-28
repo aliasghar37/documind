@@ -28,3 +28,16 @@ export type Chunk = {
   fileName?: string | null;
   pageNumber?: number | null;
 };
+
+export const TIER_LIMITS = {
+  FREE: {
+	maxTokens: 1_500_000,
+	maxProjects: 7,
+	periodDays: 30,
+  },
+  PRO: {
+	maxTokens: 5_000_000,
+	maxProjects: 20,
+	periodDays: 30,
+  },
+};
