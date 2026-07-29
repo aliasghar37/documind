@@ -1,0 +1,902 @@
+[
+  {
+	"inputs": {
+	  "projectId": "6a69b67583b5fb5db4b20c8d",
+	  "question": "What do keybullet kin drop?"
+	},
+	"outputs": {
+	  "ground_truth": "Keybullet kin drop a key upon death."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "0",
+	  "projectTitle": "eval_document_0",
+	  "mongoProjectId": "6a69b67583b5fb5db4b20c8d"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b67583b5fb5db4b20c8d",
+	  "question": "What kind of gun does the bandana bullet kin use?"
+	},
+	"outputs": {
+	  "ground_truth": "The bandana bullet kin wields a machine pistol."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "0",
+	  "projectTitle": "eval_document_0",
+	  "mongoProjectId": "6a69b67583b5fb5db4b20c8d"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b68483b5fb5db4b20c9f",
+	  "question": "What do the giants look like?"
+	},
+	"outputs": {
+	  "ground_truth": "One giant is burly, grey-skinned, and 20 feet tall. It wears heavy dark iron armour covered in metal torns. It is leaning against a chamber wall, carrying what looks to be two tower shields nearly as tall as itself, both bearing\nmenacing spikes.\n\nThe other giant  stands a tall giant in more mobile iron, clutching a dangerous-looking maul the size of Yasha, also leaning and looking disinterested."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "1",
+	  "projectTitle": "eval_document_1",
+	  "mongoProjectId": "6a69b68483b5fb5db4b20c9f"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b68483b5fb5db4b20c9f",
+	  "question": "What happens on day 2?"
+	},
+	"outputs": {
+	  "ground_truth": "After a few miles of winding tunnel, you emerge in a smaller grotto of stalactites and stalagmites dripping with condensation. Unsure if the same underground river, or another water source, is nearby, you can see quite a bit of ground water does funnel down into this area.\n\nYou encounter 2 ropers seeking the next burrowed entrance left by the Kryn."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "1",
+	  "projectTitle": "eval_document_1",
+	  "mongoProjectId": "6a69b68483b5fb5db4b20c9f"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b69483b5fb5db4b20ca8",
+	  "question": "What were the requirements for the project?"
+	},
+	"outputs": {
+	  "ground_truth": "The tool had the following requirements:\n- Chatbot that you can ask questions and get answers in response (conversational memory is not required).\n- Information is taken from an unstructured text file.\n- It must be able to tell me if it doesn\u2019t know the answer to my question.\n- Fast.\n- Efficient enough to run on my MacBook with other programs without any performance issues.\n- Locally run for privacy and to ensure it will always be free, runnable, and consistent."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "2",
+	  "projectTitle": "eval_document_2",
+	  "mongoProjectId": "6a69b69483b5fb5db4b20ca8"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b69483b5fb5db4b20ca8",
+	  "question": "What data did was used to test the prototype?"
+	},
+	"outputs": {
+	  "ground_truth": "Grace Hopper's Wikipedia page and Alan Turing's Wikipedia page were used to test the prototype."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "2",
+	  "projectTitle": "eval_document_2",
+	  "mongoProjectId": "6a69b69483b5fb5db4b20ca8"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6a783b5fb5db4b20cc5",
+	  "question": "How do the data storage options compare?"
+	},
+	"outputs": {
+	  "ground_truth": "For fast start: use SQLite3 and ChromaDB (File-based) out-of-the-box - no install required.\nFor speed + scale: use MongoDB (text collection) and Milvus (vector db) - install with Docker Compose\nFor postgres: use Postgres for both text collection and vector DB - install with Docker Compose\nFor mix-and-match: LLMWare supports 3 text collection databases (Mongo, Postgres, SQLite) and 10 vector databases (Milvus, PGVector-Postgres, Neo4j, Redis, Mongo-Atlas, Qdrant, Faiss, LanceDB, ChromaDB and Pinecone)."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "3",
+	  "projectTitle": "eval_document_3",
+	  "mongoProjectId": "6a69b6a783b5fb5db4b20cc5"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6a783b5fb5db4b20cc5",
+	  "question": "When was UTF-8 support added for European languages?"
+	},
+	"outputs": {
+	  "ground_truth": "UTF-8 support was added for European languages on Wednesday 3rd April in the v0.2.7 Update."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "3",
+	  "projectTitle": "eval_document_3",
+	  "mongoProjectId": "6a69b6a783b5fb5db4b20cc5"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6bf83b5fb5db4b20ce3",
+	  "question": "How do I make a button?"
+	},
+	"outputs": {
+	  "ground_truth": "import marimo as mo\n\nbutton = mo.ui.run_button()\nbutton\n\nmo.stop(not button.value, \"Click 'run' to generate a random number\")\n\nimport random\nrandom.randint(0, 1000)."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "4",
+	  "projectTitle": "eval_document_4",
+	  "mongoProjectId": "6a69b6bf83b5fb5db4b20ce3"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6bf83b5fb5db4b20ce3",
+	  "question": "When might I use caching?"
+	},
+	"outputs": {
+	  "ground_truth": "You might use caching when, for example, your notebook computes t-SNE, UMAP, or PyMDE embeddings."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "4",
+	  "projectTitle": "eval_document_4",
+	  "mongoProjectId": "6a69b6bf83b5fb5db4b20ce3"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6ce83b5fb5db4b20cf5",
+	  "question": "What are the key topics of this article?"
+	},
+	"outputs": {
+	  "ground_truth": "The key topics of this article are: \"why prioritizing impact matters not just for managers, but also ICs\"; \"why focusing on impact is hard\"; \"how to maximize your impact\"; and \"how to overcome common challenges in driving real impact\"."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "5",
+	  "projectTitle": "eval_document_5",
+	  "mongoProjectId": "6a69b6ce83b5fb5db4b20cf5"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6ce83b5fb5db4b20cf5",
+	  "question": "Do I have to do something all by myself to be acknowledged for it?"
+	},
+	"outputs": {
+	  "ground_truth": "You don\u2019t have to be solely responsible for something in order to take (partial) credit for it. If you provided the analysis that resulted in a pricing change that saved the company millions, then you deserve part of the credit for that impact."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "5",
+	  "projectTitle": "eval_document_5",
+	  "mongoProjectId": "6a69b6ce83b5fb5db4b20cf5"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6e183b5fb5db4b20d0a",
+	  "question": "What kinds of models would need to be officially registered?"
+	},
+	"outputs": {
+	  "ground_truth": "High-risk AI systems that are deployed by public authorities or entities acting on their behalf will have to be registered in a public EU database, unless those systems are used for law enforcement and migration. The latter will have to be registered in a non-public part of the database that will be only accessible to relevant supervisory authorities."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "6",
+	  "projectTitle": "eval_document_6",
+	  "mongoProjectId": "6a69b6e183b5fb5db4b20d0a"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6e183b5fb5db4b20d0a",
+	  "question": "What kinds of AI carry \"systematic risks\"?"
+	},
+	"outputs": {
+	  "ground_truth": "For now, general purpose AI models that were trained using a total computing power of more than 10^25 FLOPs are considered to carry systemic risks, given that models trained with larger compute tend to be more powerful. The AI Office (established within the Commission) may update this threshold in light of technological advances, and may furthermore in specific cases designate other models as such based on further criteria (e.g. number of users, or the degree of autonomy of the model)."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "6",
+	  "projectTitle": "eval_document_6",
+	  "mongoProjectId": "6a69b6e183b5fb5db4b20d0a"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6f583b5fb5db4b20d36",
+	  "question": "Which quest does the emperor give the player?"
+	},
+	"outputs": {
+	  "ground_truth": "The emperor gives the player the \"Visit the Emperor's Old Hideout\" quest."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "7",
+	  "projectTitle": "eval_document_7",
+	  "mongoProjectId": "6a69b6f583b5fb5db4b20d36"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6f583b5fb5db4b20d36",
+	  "question": "Who ambushes the party at Wyrm's lookout?"
+	},
+	"outputs": {
+	  "ground_truth": "On the way to Baldur's Gate, the party will be ambushed by a group of Gish'ra warriors while resting at Wyrm's Lookout."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "7",
+	  "projectTitle": "eval_document_7",
+	  "mongoProjectId": "6a69b6f583b5fb5db4b20d36"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b70b83b5fb5db4b20d4f",
+	  "question": "What did I drink at the pintxo bars?"
+	},
+	"outputs": {
+	  "ground_truth": "You drank txakoli at the pintxo bars."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "8",
+	  "projectTitle": "eval_document_8",
+	  "mongoProjectId": "6a69b70b83b5fb5db4b20d4f"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b70b83b5fb5db4b20d4f",
+	  "question": "Which part of the trip did I like the most?"
+	},
+	"outputs": {
+	  "ground_truth": "Your favourite part of the trip was your four days on the Camino."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "8",
+	  "projectTitle": "eval_document_8",
+	  "mongoProjectId": "6a69b70b83b5fb5db4b20d4f"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b71a83b5fb5db4b20d61",
+	  "question": "What is the meaning behind the infrared scenes?"
+	},
+	"outputs": {
+	  "ground_truth": "The significance of the use of infrared might be in stating how the Polish family cannot be themselves as soon as they step out of their house or into the open balcony as well. Although the girl takes on the dangerous responsibility of helping the prisoners, she still cannot express her true self in public, leading to her being shown in infrared. Another perspective is that the girl and her mother truly stand out in this horrific world solely because of their generous actions. Therefore, in a film like this, in which the Nazis and the enablers are the \u201cnormal\u201d people, anyone with any sense of humanity has to be visually differentiated from the Hoss family members."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "9",
+	  "projectTitle": "eval_document_9",
+	  "mongoProjectId": "6a69b71a83b5fb5db4b20d61"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b71a83b5fb5db4b20d61",
+	  "question": "How do the people who commit atrocious acts and those that are complicit in these acts differ?"
+	},
+	"outputs": {
+	  "ground_truth": "The Zone of Interest does not really differentiate between evil-doers and those supporting such evil."
+	},
+	"metadata": {
+	  "qa_type": "single_passage",
+	  "document_index": "9",
+	  "projectTitle": "eval_document_9",
+	  "mongoProjectId": "6a69b71a83b5fb5db4b20d61"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b67583b5fb5db4b20c8d",
+	  "question": "Which enemy types wield an AK-47?"
+	},
+	"outputs": {
+	  "ground_truth": "Assault-rifle wielding Bullet and Tankers wield AK-47s."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "0",
+	  "projectTitle": "eval_document_0",
+	  "mongoProjectId": "6a69b67583b5fb5db4b20c8d"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b67583b5fb5db4b20c8d",
+	  "question": "What makes jammed enemies different?"
+	},
+	"outputs": {
+	  "ground_truth": "Jammed Keybullet Kin drop 2 keys instead of 1, jammed Chance Kins have a chance to drop twice the loot, and jammed red-Caped Bullet Kin deal contact damage. Additionally, Jammed Keybullet Kin Jammed variations run faster and will take less time to teleport away from the player if they are not destroyed quickly."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "0",
+	  "projectTitle": "eval_document_0",
+	  "mongoProjectId": "6a69b67583b5fb5db4b20c8d"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b68483b5fb5db4b20c9f",
+	  "question": "What enemies are encountered in the second encounter?"
+	},
+	"outputs": {
+	  "ground_truth": "26 kobolds and 1 kobold inventor are encountered in the second encounter."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "1",
+	  "projectTitle": "eval_document_1",
+	  "mongoProjectId": "6a69b68483b5fb5db4b20c9f"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b68483b5fb5db4b20c9f",
+	  "question": "What monsters are encountered in this journey?"
+	},
+	"outputs": {
+	  "ground_truth": "Ropers, kobolds, kobold inventors, fire giants, and fire giant dreadnoughts."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "1",
+	  "projectTitle": "eval_document_1",
+	  "mongoProjectId": "6a69b68483b5fb5db4b20c9f"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b69483b5fb5db4b20ca8",
+	  "question": "What framework was chosen to execute the RAG process and what alternatives were considered?"
+	},
+	"outputs": {
+	  "ground_truth": "The LangChain framework was used to orchestrate the RAG process. Llamaindex and LitGPT were also considered during development. Llmware was considered after development had finished."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "2",
+	  "projectTitle": "eval_document_2",
+	  "mongoProjectId": "6a69b69483b5fb5db4b20ca8"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b69483b5fb5db4b20ca8",
+	  "question": "Which large language models and vector databases were shortlisted for this project?"
+	},
+	"outputs": {
+	  "ground_truth": "The tinyllama-1.1b-chat-v1.0 Q6_K, Phi 3 Q4_K_M\", bartowski/dolphin-2.8-experiment26-7b-GGUF Q3_K_L, mgonzs13/Mistroll-7B-v2.2-GGU, and QuantFactory/Meta-Llama-3-8B-Instruct Q3_K_M large language models and the Chroma, Qdrant, and Vespa vector databases were shortlisted for this project."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "2",
+	  "projectTitle": "eval_document_2",
+	  "mongoProjectId": "6a69b69483b5fb5db4b20ca8"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6a783b5fb5db4b20cc5",
+	  "question": "What kind of model is the bling-phi-3 model"
+	},
+	"outputs": {
+	  "ground_truth": "The bling-phi-3 model is the newest and most accurate BLING/DRAGON model. BLING models are small CPU-based RAG-optimized, instruct-following 1B-3B parameter models. DRAGON models are production-grade RAG-optimized 6-7B parameter models - \"Delivering RAG on ...\" the leading foundation base models."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "3",
+	  "projectTitle": "eval_document_3",
+	  "mongoProjectId": "6a69b6a783b5fb5db4b20cc5"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6a783b5fb5db4b20cc5",
+	  "question": "In which versions were the SLIM models updated?"
+	},
+	"outputs": {
+	  "ground_truth": "The SLIM models were updated in versions 0.2.3, 0.2.6, 0.2.12, 0.3.0, and 0.3.1."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "3",
+	  "projectTitle": "eval_document_3",
+	  "mongoProjectId": "6a69b6a783b5fb5db4b20cc5"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6bf83b5fb5db4b20ce3",
+	  "question": "What are the ways of grouping UI elements together?"
+	},
+	"outputs": {
+	  "ground_truth": "UI elements can be grouped together using the following methods:\n- Create an array of UI elements.\n- Create a dictionary of UI elements.\n- Embed a dynamic number of UI elements in another output.\n- Create a hstack (or vstack) of UI elements with on_change handlers.\n- Create a table column of buttons with on_change handlers\n- Create a form with multiple UI elements."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "4",
+	  "projectTitle": "eval_document_4",
+	  "mongoProjectId": "6a69b6bf83b5fb5db4b20ce3"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6bf83b5fb5db4b20ce3",
+	  "question": "What are the parameters for the mo.ui.text function?"
+	},
+	"outputs": {
+	  "ground_truth": "The parameters for mo.ui.text are label and placeholder. These are both optional."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "4",
+	  "projectTitle": "eval_document_4",
+	  "mongoProjectId": "6a69b6bf83b5fb5db4b20ce3"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6ce83b5fb5db4b20cf5",
+	  "question": "What are the given examples of common challenges?"
+	},
+	"outputs": {
+	  "ground_truth": "The given examples of common challenges are: \"you create a comprehensive analysis but nobody is acting on it\"; \"you ran an experiment but nobody is using the results\"; \"you built a predictive model, but the team you built it for is not using it\"; and \"you created a dashboard but nobody is looking at it\"."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "5",
+	  "projectTitle": "eval_document_5",
+	  "mongoProjectId": "6a69b6ce83b5fb5db4b20cf5"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6ce83b5fb5db4b20cf5",
+	  "question": "What are the four steps to become more impact-focused?"
+	},
+	"outputs": {
+	  "ground_truth": "The four steps to become more impact-focused are: \"Step 1: Understand what impact looks like for your role and measure your success accordingly\", \"Step 2: Ensure your work solves a real business problem\", \"Step 3: Ensure there is buy-in for your work\", and \"Step 4: Focus your time on the highest-impact thing\"."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "5",
+	  "projectTitle": "eval_document_5",
+	  "mongoProjectId": "6a69b6ce83b5fb5db4b20cf5"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6e183b5fb5db4b20d0a",
+	  "question": "What are the risk classifications for AI?"
+	},
+	"outputs": {
+	  "ground_truth": "The risk classifications are: \"minimal risk\", \"high-risk\", \"unacceptable risk\", and \"specific transparency risk\""
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "6",
+	  "projectTitle": "eval_document_6",
+	  "mongoProjectId": "6a69b6e183b5fb5db4b20d0a"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6e183b5fb5db4b20d0a",
+	  "question": "What are the rules for developing general purpose AI models?"
+	},
+	"outputs": {
+	  "ground_truth": "General purpose AI models that were trained using a total computing power of more than 10^25 FLOPs are considered to carry systemic risks. 12 months after the AI Act enters into force, the obligations for general purpose AI governance become applicable. Providers of general purpose AI models, which are trained on large data amounts and therefore prone to high energy consumption, are required to disclose energy consumption. Providers of free and open-source models are exempted from most of obligations, but this exemption does not cover obligations for providers of general purpose AI models with systemic risks."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "6",
+	  "projectTitle": "eval_document_6",
+	  "mongoProjectId": "6a69b6e183b5fb5db4b20d0a"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6f583b5fb5db4b20d36",
+	  "question": "What are the emperor's aliases?"
+	},
+	"outputs": {
+	  "ground_truth": "The emperor has also known as the \"Dream Guardian\", the \"Dream Visitor\", and \"Balduran\"."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "7",
+	  "projectTitle": "eval_document_7",
+	  "mongoProjectId": "6a69b6f583b5fb5db4b20d36"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6f583b5fb5db4b20d36",
+	  "question": "Who was Duke Stelmane?"
+	},
+	"outputs": {
+	  "ground_truth": "Duke Stelmane was a major figure of the Knights of the Shield, a lawful and neutral evil conglomerate of politicians and merchants manipulating events behind the scenes, acting as the Emperor's envoy while it secretly kept her enthralled. Duke Belynne Stelmane dies recently."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "7",
+	  "projectTitle": "eval_document_7",
+	  "mongoProjectId": "6a69b6f583b5fb5db4b20d36"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b70b83b5fb5db4b20d4f",
+	  "question": "Where was I offered desserts?"
+	},
+	"outputs": {
+	  "ground_truth": "You ate a delightful puff pastry and custard-filled local treat, and a slice of Basque cheesecake at Otaegui, and you were beckoned with cake in the camino."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "8",
+	  "projectTitle": "eval_document_8",
+	  "mongoProjectId": "6a69b70b83b5fb5db4b20d4f"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b70b83b5fb5db4b20d4f",
+	  "question": "What forms of exercise did we do?"
+	},
+	"outputs": {
+	  "ground_truth": "You did hiking and surfing."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "8",
+	  "projectTitle": "eval_document_8",
+	  "mongoProjectId": "6a69b70b83b5fb5db4b20d4f"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b71a83b5fb5db4b20d61",
+	  "question": "Who is in the family that this film is about?"
+	},
+	"outputs": {
+	  "ground_truth": "The film takes the perspective of the Hoss family. The Hoss family consists of: the patriarch Rudolf and his wife, Hedwig;their two sons and three daughters, the youngest still a baby; and Hedwig's mother."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "9",
+	  "projectTitle": "eval_document_9",
+	  "mongoProjectId": "6a69b71a83b5fb5db4b20d61"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b71a83b5fb5db4b20d61",
+	  "question": "What items do Rudolf's family take from the Jews and who takes them?"
+	},
+	"outputs": {
+	  "ground_truth": "Rudolf's wife, Hedwig, often receives luxury and expensive items taken from the Jews. On one occasion, she is seen receiving a fancy fur coat with lipstick lying inside one of the pockets. The Rudolf's children are also seen collecting and playing with gold teeth taken from the remains of the dead Jews."
+	},
+	"metadata": {
+	  "qa_type": "multi_passage",
+	  "document_index": "9",
+	  "projectTitle": "eval_document_9",
+	  "mongoProjectId": "6a69b71a83b5fb5db4b20d61"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b67583b5fb5db4b20c8d",
+	  "question": "How much health does the Mutant Bullet Kin have?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "0",
+	  "projectTitle": "eval_document_0",
+	  "mongoProjectId": "6a69b67583b5fb5db4b20c8d"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b67583b5fb5db4b20c8d",
+	  "question": "Where can bishops be found?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "0",
+	  "projectTitle": "eval_document_0",
+	  "mongoProjectId": "6a69b67583b5fb5db4b20c8d"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b68483b5fb5db4b20c9f",
+	  "question": "What happened on day 10?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "1",
+	  "projectTitle": "eval_document_1",
+	  "mongoProjectId": "6a69b68483b5fb5db4b20c9f"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b68483b5fb5db4b20c9f",
+	  "question": "What did the goblins say?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "1",
+	  "projectTitle": "eval_document_1",
+	  "mongoProjectId": "6a69b68483b5fb5db4b20c9f"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b69483b5fb5db4b20ca8",
+	  "question": "Why was the H100 GPU chosen for computation?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "2",
+	  "projectTitle": "eval_document_2",
+	  "mongoProjectId": "6a69b69483b5fb5db4b20ca8"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b69483b5fb5db4b20ca8",
+	  "question": "Which masked language model was chosen for the AI?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "2",
+	  "projectTitle": "eval_document_2",
+	  "mongoProjectId": "6a69b69483b5fb5db4b20ca8"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6a783b5fb5db4b20cc5",
+	  "question": "When was GPT 4 made available"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "3",
+	  "projectTitle": "eval_document_3",
+	  "mongoProjectId": "6a69b6a783b5fb5db4b20cc5"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6a783b5fb5db4b20cc5",
+	  "question": "What Tensorflow features are supported?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "3",
+	  "projectTitle": "eval_document_3",
+	  "mongoProjectId": "6a69b6a783b5fb5db4b20cc5"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6bf83b5fb5db4b20ce3",
+	  "question": "How can I create graphs?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "4",
+	  "projectTitle": "eval_document_4",
+	  "mongoProjectId": "6a69b6bf83b5fb5db4b20ce3"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6bf83b5fb5db4b20ce3",
+	  "question": "What is the name of the Java version of marimo?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "4",
+	  "projectTitle": "eval_document_4",
+	  "mongoProjectId": "6a69b6bf83b5fb5db4b20ce3"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6ce83b5fb5db4b20cf5",
+	  "question": "What is step 5?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "5",
+	  "projectTitle": "eval_document_5",
+	  "mongoProjectId": "6a69b6ce83b5fb5db4b20cf5"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6ce83b5fb5db4b20cf5",
+	  "question": "What is the advice for data scientists in finance companies?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "5",
+	  "projectTitle": "eval_document_5",
+	  "mongoProjectId": "6a69b6ce83b5fb5db4b20cf5"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6e183b5fb5db4b20d0a",
+	  "question": "What obligations are robots expected to follow?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "6",
+	  "projectTitle": "eval_document_6",
+	  "mongoProjectId": "6a69b6e183b5fb5db4b20d0a"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6e183b5fb5db4b20d0a",
+	  "question": "How long are the minimum prison sentences for rule breakers?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "6",
+	  "projectTitle": "eval_document_6",
+	  "mongoProjectId": "6a69b6e183b5fb5db4b20d0a"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6f583b5fb5db4b20d36",
+	  "question": "What needs to be done to kiss the Emperor?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "7",
+	  "projectTitle": "eval_document_7",
+	  "mongoProjectId": "6a69b6f583b5fb5db4b20d36"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b6f583b5fb5db4b20d36",
+	  "question": "How many wings did Balduran have?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "7",
+	  "projectTitle": "eval_document_7",
+	  "mongoProjectId": "6a69b6f583b5fb5db4b20d36"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b70b83b5fb5db4b20d4f",
+	  "question": "What is the author's favourite thing about Barcelona?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "8",
+	  "projectTitle": "eval_document_8",
+	  "mongoProjectId": "6a69b70b83b5fb5db4b20d4f"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b70b83b5fb5db4b20d4f",
+	  "question": "Did the author prefer Madrid or San Sebastian?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "8",
+	  "projectTitle": "eval_document_8",
+	  "mongoProjectId": "6a69b70b83b5fb5db4b20d4f"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b71a83b5fb5db4b20d61",
+	  "question": "Who plays the boy in striped pyjamas?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "9",
+	  "projectTitle": "eval_document_9",
+	  "mongoProjectId": "6a69b71a83b5fb5db4b20d61"
+	}
+  },
+  {
+	"inputs": {
+	  "projectId": "6a69b71a83b5fb5db4b20d61",
+	  "question": "What relgion are the members of the Hoss family?"
+	},
+	"outputs": {
+	  "ground_truth": "I do not know"
+	},
+	"metadata": {
+	  "qa_type": "no_answer",
+	  "document_index": "9",
+	  "projectTitle": "eval_document_9",
+	  "mongoProjectId": "6a69b71a83b5fb5db4b20d61"
+	}
+  }
+]
