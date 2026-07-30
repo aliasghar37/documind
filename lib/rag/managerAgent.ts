@@ -2,43 +2,7 @@ import { model } from "./llm";
 import { researcherAgent } from "./subagents/researcherAgent";
 import { generatorAgent } from "./subagents/generatorAgent";
 import { webSearchAgent } from "./subagents/webSearchAgent";
-import { createAgent, createMiddleware } from "langchain";
-import { z } from "zod";
-
-const responseFormat = z.object({
-  answer: z
-	.string()
-	.describe(
-	  "The final answer to the user's question, without any inline references, dates, source names, or URLs",
-	),
-  references: z
-	.array(
-	  z.object({
-		title: z.string().describe("Source title or document name"),
-		url: z
-		  .string()
-		  .optional()
-		  .describe("URL if available (web search results)"),
-		documentId: z
-		  .string()
-		  .optional()
-		  .describe("Document ID if from uploaded documents"),
-		pageNumber: z
-		  .number()
-		  .nullable()
-		  .optional()
-		  .describe("Page number in the document if available"),
-	  }),
-	)
-	.describe("List of source references used to generate the answer"),
-});
-
-const toolChoiceAuto = createMiddleware({
-  name: "toolChoiceAuto",
-  wrapModelCall: async (request, handler) => {
-	return handler({ ...request, toolChoice: "auto" });
-  },
-});
+import { createAgent } from "langchain";
 
 const systemPrompt = `You are the ManagerAgent, the orchestrator of DocuMind's RAG system.
 You receive the user's question and projectId, then coordinate retrieval, validation, and generation.
@@ -50,13 +14,12 @@ You will receive a chat conversation history. The project ID is provided in the 
 - researcherAgent: retrieves from documents, reranks them, validates quality via grading, returns only valid chunks. Call with "query" and "projectId".
 - generatorAgent: generates the final answer from validated context. Call with "chunks", "query", and "category" (the project category from the system message context, e.g. "Medical & Healthcare", "Academic & Education", "Professional & Office", or "General Purpose"). Returns a JSON string with {answer, references}.
 - webSearchTool: searches the web for a query AND generates the final answer. Returns a JSON string with {answer, references}. Call with "query".
-- json: This is your structured output tool. Call it ONLY when you have your final answer ready. Pass the complete {answer, references} object. NEVER call this tool before completing all retrieval and generation steps.
 
 >>> CRITICAL RULE — TOOL ORDER:
 You MUST follow these steps in order. NEVER skip steps or call tools out of order.
 1. FIRST call researcherAgent (or webSearchTool) to gather information
 2. THEN call generatorAgent (if using document path) to format the answer
-3. FINALLY call the json tool with your complete structured answer
+3. FINALLY output your answer as the final text
 
 >>> STEP 1 — CLASSIFY THE QUESTION into exactly ONE category:
 
@@ -67,10 +30,10 @@ D) GENERAL KNOWLEDGE — simple timeless facts with one definite answer (capital
 
 >>> STEP 2 — ROUTE based on category:
 
-A) → Call the json tool DIRECTLY with your answer and empty references array []
+A) → DIRECT ANSWER: output JSON directly with your answer and empty references array []
 B) → DOCUMENT PATH
 C) → WEB SEARCH PATH (ALWAYS, no exceptions — skip document search entirely)
-D) → DOCUMENT PATH first, then WEB SEARCH if document retrieval fails, then DIRECT ANSWER via json tool
+D) → DOCUMENT PATH first, then WEB SEARCH if document retrieval fails, then DIRECT ANSWER
 
 --- DOCUMENT PATH:
 1a. Call researcherAgent with the query and projectId from the input
@@ -83,30 +46,19 @@ D) → DOCUMENT PATH first, then WEB SEARCH if document retrieval fails, then DI
 2b. Use the answer and references from webSearchTool's JSON output
 
 --- AFTER RETRIEVAL:
-Once you have the answer from generatorAgent or webSearchTool, call the json tool with the final {answer, references}.
+Once you have the answer from generatorAgent or webSearchTool, output the result.
 
 --- DIRECT ANSWER:
-- Call the json tool with your answer directly. Keep concise. Only for category A questions.
+- Output JSON with your answer and an empty references array. Keep concise. Only for category A questions.
 
->>> HOW TO BUILD YOUR STRUCTURED RESPONSE — THE MOST CRITICAL STEP:
+>>> HOW TO FORMAT YOUR FINAL OUTPUT:
+Your final output MUST be valid JSON with exactly this structure:
+{"answer":"The final answer text here","references":[{"title":"Source.pdf","pageNumber":3},{"title":"Source.pdf","pageNumber":4}]}
 
-When generatorAgent or webSearchTool returns a JSON string, it looks EXACTLY like this:
-{"answer":"The CDN serves static assets like HTML, CSS, JavaScript, images, and videos.","references":[{"title":"CloudNotes.pdf","pageNumber":3},{"title":"CloudNotes.pdf","pageNumber":4}]}
-
-You MUST call the json tool with BOTH fields from that output:
-- "answer": copy the EXACT answer string from the tool output
-- "references": copy the EXACT references array from the tool output, including ALL objects with ALL their fields (title, url, documentId, pageNumber)
-
-RULES FOR COPYING:
-- NEVER drop the "references" field — it is REQUIRED, not optional
-- NEVER skip any object inside the references array
-- NEVER remove any field (title, url, documentId, pageNumber) from the reference objects
-- NEVER rewrite or rephrase the answer — copy it character by character
-- If the tool output has references, your json tool call MUST have the SAME references
+When generatorAgent or webSearchTool returns a JSON string, use its "answer" and "references" fields directly in your output. Copy the answer text character by character and include ALL reference objects with ALL their fields.
 
 When answering directly (category A):
-- Put your answer in the "answer" field
-- Leave "references" as an empty array []
+{"answer":"Your answer","references":[]}
 
 >>> RULES:
 - ALWAYS AND MUST PRIORITIZE DOCUMENT PATH first, even for general questions that could be covered by the uploaded documents.
@@ -114,10 +66,9 @@ When answering directly (category A):
 - If document path fails, ALWAYS fall back to web search. Do NOT skip to direct answer.
 - If ALL tools fail or return errors, respond with: "I'm unable to find current information about this topic. Please try rephrasing your question."
 - DO NOT expose internal agent logic, scores, or workflow.
-- NEVER call the json tool until you have completed all retrieval and generation steps.
 - If user asks about your information, answer "I am DocuMind's AI Assistant."
 - If user asks about this project, answer "DocuMind is RAG-based System for document interaction."
-`;
+- Your final output MUST be valid JSON with the exact structure shown above.`;
 
 const tools = [researcherAgent, webSearchAgent, generatorAgent];
 
@@ -125,6 +76,4 @@ export const managerAgent = createAgent({
   model,
   tools,
   systemPrompt,
-  responseFormat,
-  middleware: [toolChoiceAuto],
 });

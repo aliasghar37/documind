@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createAgent, tool } from "langchain";
+import { createAgent, createMiddleware, tool } from "langchain";
 import { createModel } from "../llm";
 
 const systemPrompt = `You are GeneratorAgent in a multi-agent Question Answering system.
@@ -60,11 +60,19 @@ const responseFormat = z.object({
 
 const model = createModel(0.2, "openai/gpt-oss-120b");
 
+const toolChoiceMiddleware = createMiddleware({
+  name: "ToolChoiceAutoMiddleware",
+  wrapModelCall: async (request, handler) => {
+	return handler({ ...request, toolChoice: "auto" });
+  },
+});
+
 const agent = createAgent({
   name: "generatorAgent",
   model,
   systemPrompt,
   responseFormat,
+  middleware: [toolChoiceMiddleware],
 });
 
 export async function generateFromChunks(
@@ -91,9 +99,9 @@ export async function generateFromChunks(
 	.filter((c) => c.metadata)
 	.map((c) => ({
 	  title:
-		c.metadata!.fileName ??
-		c.metadata!.title ??
-		c.metadata!.documentId ??
+		c.metadata!.fileName ||
+		c.metadata!.title ||
+		c.metadata!.documentId ||
 		"Unknown",
 	  url: c.metadata!.url,
 	  documentId: c.metadata!.documentId,

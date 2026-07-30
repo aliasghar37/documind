@@ -126,49 +126,111 @@ export async function POST(req: Request) {
 	{ streamMode: ["messages", "values"], callbacks: [tracker] },
   );
 
-	const stream = createUIMessageStream({
-	  execute: async ({ writer }) => {
-		const state: { structuredResponse?: { answer: string; references: any[] } } = {};
+  const wrappedStream = (async function* () {
+	for await (const chunk of graphStream) {
+	  yield chunk;
+	}
+  })();
 
-		const innerStream = toUIMessageStream<{
-		  structuredResponse?: { answer: string; references: any[] };
-		}>(graphStream, {
-		  onFinish: async (finalState) => {
-			if (finalState?.structuredResponse) {
-			  state.structuredResponse = finalState.structuredResponse;
-			}
-		  },
-		});
+  const stream = createUIMessageStream({
+	execute: async ({ writer }) => {
+	  const lastValuesResolvers: { resolve: ((data: any) => void) | null; reject: ((error: any) => void) | null } = { resolve: null, reject: null };
+	  const lastValuesPromise = new Promise<any>((resolve, reject) => {
+		lastValuesResolvers.resolve = resolve;
+		lastValuesResolvers.reject = reject;
+	  });
 
-		const reader = innerStream.getReader();
+	  const innerStream = toUIMessageStream(wrappedStream as any, {
+		onFinish: (data) => lastValuesResolvers.resolve?.(data),
+		onError: (error) => {
+		  console.error("[chat/route] stream error:", error);
+		  lastValuesResolvers.reject?.(error);
+		},
+	  });
+
+	  const reader = innerStream.getReader();
+	  try {
 		while (true) {
 		  const { done, value } = await reader.read();
 		  if (done) break;
 		  writer.write(value);
 		}
+	  } catch (e) {
+		console.error("[chat/route] Stream error:", e);
+		lastValuesResolvers.reject?.(e);
+	  }
 
-		if (state.structuredResponse) {
-		  await saveMessage(
-			dbUser.id,
-			projectId,
-			"AI",
-			state.structuredResponse.answer,
-			state.structuredResponse.references,
-		  );
+	  let lastValuesData: any = null;
+	  try {
+		const timeoutPromise = new Promise<any>((resolve) => setTimeout(() => resolve(null), 5000));
+		lastValuesData = await Promise.race([lastValuesPromise, timeoutPromise]);
+	  } catch {
+		lastValuesData = null;
+	  }
 
-		  const input = tracker.input;
-		  const output = tracker.output;
-		  if (input > 0 || output > 0) {
-			await addUsage(dbUser.id, input, output);
+	  let answerContent = "";
+	  if (lastValuesData?.messages && Array.isArray(lastValuesData.messages)) {
+		for (let i = lastValuesData.messages.length - 1; i >= 0; i--) {
+		  const msg = lastValuesData.messages[i];
+		  const type = msg._getType?.() ?? msg.type;
+		  if (type === "ai" || type === "AIMessageChunk" || type === "AIMessage") {
+			answerContent = typeof msg.content === "string" ? msg.content : "";
+			break;
 		  }
-
-		  const text = JSON.stringify(state.structuredResponse);
-		  writer.write({ type: "text-start", id: "structured-answer" });
-		  writer.write({ type: "text-delta", delta: text, id: "structured-answer" });
-		  writer.write({ type: "text-end", id: "structured-answer" });
 		}
-	  },
-	});
+	  }
+
+	  let parsedAnswer = answerContent;
+	  let parsedReferences: any[] = [];
+	  try {
+		const trimmed = answerContent.trim();
+		const jsonStart = trimmed.indexOf("{");
+		const jsonEnd = trimmed.lastIndexOf("}");
+		if (jsonStart !== -1 && jsonEnd > jsonStart) {
+		  const parsed = JSON.parse(trimmed.slice(jsonStart, jsonEnd + 1));
+		  if (typeof parsed.answer === "string") {
+			parsedAnswer = parsed.answer;
+			parsedReferences = Array.isArray(parsed.references) ? parsed.references : [];
+		  }
+		}
+	  } catch {}
+
+	  if (lastValuesData?.messages) {
+		for (const msg of lastValuesData.messages) {
+		  if (msg._getType?.() === "tool" && typeof msg.content === "string") {
+			try {
+			  const toolResult = JSON.parse(msg.content);
+			  if (toolResult.references && Array.isArray(toolResult.references)) {
+				parsedReferences = toolResult.references;
+			  }
+			  if (typeof toolResult.answer === "string" && toolResult.answer) {
+				parsedAnswer = toolResult.answer;
+			  }
+			  if (parsedReferences.length > 0 || parsedAnswer) break;
+			} catch {}
+		  }
+		}
+	  }
+
+	  if (parsedAnswer) {
+		await saveMessage(
+		  dbUser.id,
+		  projectId,
+		  "AI",
+		  JSON.stringify({
+			answer: parsedAnswer,
+			references: parsedReferences ?? [],
+		  }),
+		);
+	  }
+
+	  const input = tracker.input;
+	  const output = tracker.output;
+	  if (input > 0 || output > 0) {
+		await addUsage(dbUser.id, input, output);
+	  }
+	},
+  });
 
   return createUIMessageStreamResponse({ stream });
 }

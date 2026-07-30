@@ -40,7 +40,12 @@ export default function CustomViewer({
 	documents[0],
   );
   const [documentMenuOpen, setDocumentMenuOpen] = useState(false);
+  const [viewerReady, setViewerReady] = useState(false);
   const registeredRegistryRef = useRef<unknown>(null);
+
+  useEffect(() => {
+	setViewerReady(false);
+  }, [selectedDocument.id]);
 
   useEffect(() => {
 	setProjectTitle(project.title);
@@ -50,7 +55,7 @@ export default function CustomViewer({
 	};
   }, [project.title, setProjectTitle]);
 
-  useAnnotationSync(viewerRef, selectedDocument.id);
+  useAnnotationSync(viewerRef, selectedDocument.id, viewerReady, "You");
 
   const viewerConfig = useMemo(
 	() => ({
@@ -63,6 +68,7 @@ export default function CustomViewer({
 		"insert",
 		"form",
 		"redaction",
+		"annotation-text",
 	  ],
 	  permissions: {
 		enforceDocumentPermissions: true,
@@ -70,6 +76,9 @@ export default function CustomViewer({
 		  print: false,
 		  assembleDocument: false,
 		},
+	  },
+	  annotations: {
+		annotationAuthor: "You",
 	  },
 	  theme: {
 		preference: "light" as const,
@@ -117,7 +126,7 @@ export default function CustomViewer({
 	  },
 	  tabBar: "never" as const,
 	}),
-	[selectedDocument.fileUrl],
+	[selectedDocument.fileUrl, "You"],
   );
 
   const handleReady = async () => {
@@ -125,6 +134,7 @@ export default function CustomViewer({
 	if (!registry || registeredRegistryRef.current === registry) return;
 
 	registeredRegistryRef.current = registry;
+	setViewerReady(true);
 
 	const commands = registry.getPlugin("commands")?.provides?.();
 	const ui = registry.getPlugin("ui")?.provides?.();

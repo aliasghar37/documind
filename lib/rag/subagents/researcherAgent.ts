@@ -5,7 +5,7 @@ import { hybridSearch } from "../retriever/hybridSearch";
 import { rerankChunks } from "../retriever/reranker";
 import { graderAgent } from "./graderAgent";
 
-const MAX_ATTEMPTS = 2;
+const MAX_ATTEMPTS = 1;
 
 export const researcherAgent = tool(
   async ({ query, projectId }: { query: string; projectId: string }) => {

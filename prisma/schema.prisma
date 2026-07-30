@@ -83,7 +83,7 @@ model Document {
   fileType     String
   pages        Int
   metadata     Json?
-  annotationData Json?
+
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 

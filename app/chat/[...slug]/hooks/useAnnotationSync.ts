@@ -13,6 +13,8 @@ const DEBOUNCE_MS = 1000;
 export function useAnnotationSync(
   viewerRef: React.RefObject<PDFViewerRef | null>,
   documentId: string,
+  ready: boolean,
+  userName?: string,
 ) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadedRef = useRef(false);
@@ -26,9 +28,12 @@ export function useAnnotationSync(
 
 	try {
 	  const items = await annotation.exportAnnotations().toPromise();
-	  await handleSaveAnnotations(documentId, items as any);
-	} catch {
-	  // export failed — non-critical
+	  const result = await handleSaveAnnotations(documentId, items as any);
+	  if (!result.success) {
+		console.warn("Annotation save failed:", result.message);
+	  }
+	} catch (err) {
+	  console.warn("Annotation export/save failed:", err);
 	}
   }, [viewerRef, documentId]);
 
@@ -40,11 +45,12 @@ export function useAnnotationSync(
   }, [flush]);
 
   useEffect(() => {
+	if (!ready) return;
 	let cancelled = false;
 
 	const setup = async () => {
 	  const registry = await viewerRef.current?.registry;
-	  if (!registry) return;
+	  if (!registry || cancelled) return;
 	  const plugin = registry.getPlugin("annotation");
 	  if (!plugin?.provides) return;
 	  const annotation = plugin.provides();
@@ -54,7 +60,12 @@ export function useAnnotationSync(
 	  if (cancelled) return;
 
 	  if (saved.length > 0) {
-		annotation.importAnnotations(saved as any);
+		const patched = userName
+		  ? saved.map((a: any) =>
+			  a.author === "Guest" ? { ...a, author: userName } : a,
+			)
+		  : saved;
+		annotation.importAnnotations(patched as any);
 	  }
 	  loadedRef.current = true;
 
@@ -70,6 +81,7 @@ export function useAnnotationSync(
 	return () => {
 	  cancelled = true;
 	  if (timerRef.current) clearTimeout(timerRef.current);
+	  loadedRef.current = false;
 	};
-  }, [viewerRef, documentId, debouncedSave]);
+  }, [viewerRef, documentId, ready, debouncedSave]);
 }

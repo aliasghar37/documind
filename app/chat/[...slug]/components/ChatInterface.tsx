@@ -39,6 +39,84 @@ function getMessageText(message: UIMessage): string {
 	.join("");
 }
 
+function getMessageAnswer(message: UIMessage): ParsedResponse {
+  const toolAnswer = extractAnswerFromToolParts(message);
+  const toolRefs = extractReferencesFromToolParts(message);
+
+  if (toolAnswer) {
+	return { answer: toolAnswer, references: toolRefs };
+  }
+
+  const text = getMessageText(message);
+  if (text.trim()) {
+	const parsed = parseAiResponse(text);
+	if (parsed.answer) return parsed;
+  }
+
+  if (toolRefs.length > 0) {
+	return { answer: "", references: toolRefs };
+  }
+
+  if ((message as any).content) {
+	const parsed = parseAiResponse((message as any).content);
+	if (parsed.answer) return parsed;
+  }
+
+  return { answer: "", references: [] };
+}
+
+function extractReferencesFromToolParts(message: UIMessage): ParsedResponse["references"] {
+  for (const part of message.parts) {
+	if (part.type === "dynamic-tool") {
+	  const dp = part as any;
+	  if ((dp.toolName === "generatorAgent" || dp.toolName === "webSearchTool") && dp.output) {
+		const outputStr = typeof dp.output === "string" ? dp.output : JSON.stringify(dp.output);
+		try {
+		  const parsed = JSON.parse(outputStr);
+		  if (Array.isArray(parsed.references)) return parsed.references;
+		} catch {}
+	  }
+	}
+	if (part.type === "tool-invocation") {
+	  const ti = (part as any).toolInvocation as any;
+	  if ((ti.toolName === "generatorAgent" || ti.toolName === "webSearchTool") && ti.result) {
+		const resultStr = typeof ti.result === "string" ? ti.result : JSON.stringify(ti.result);
+		try {
+		  const parsed = JSON.parse(resultStr);
+		  if (Array.isArray(parsed.references)) return parsed.references;
+		} catch {}
+	  }
+	}
+  }
+  return [];
+}
+
+function extractAnswerFromToolParts(message: UIMessage): string | null {
+  for (const part of message.parts) {
+	if (part.type === "dynamic-tool") {
+	  const dp = part as any;
+	  if ((dp.toolName === "generatorAgent" || dp.toolName === "webSearchTool") && dp.output) {
+		const outputStr = typeof dp.output === "string" ? dp.output : JSON.stringify(dp.output);
+		try {
+		  const parsed = JSON.parse(outputStr);
+		  if (typeof parsed.answer === "string" && parsed.answer) return parsed.answer;
+		} catch {}
+	  }
+	}
+	if (part.type === "tool-invocation") {
+	  const ti = (part as any).toolInvocation as any;
+	  if ((ti.toolName === "generatorAgent" || ti.toolName === "webSearchTool") && ti.result) {
+		const resultStr = typeof ti.result === "string" ? ti.result : JSON.stringify(ti.result);
+		try {
+		  const parsed = JSON.parse(resultStr);
+		  if (typeof parsed.answer === "string" && parsed.answer) return parsed.answer;
+		} catch {}
+	  }
+	}
+  }
+  return null;
+}
+
 function parseAiResponse(text: string): ParsedResponse {
   try {
 	let cleaned = text.trim();
@@ -46,25 +124,37 @@ function parseAiResponse(text: string): ParsedResponse {
 	  .replace(/^```(?:json)?\s*\n?/i, "")
 	  .replace(/\n?```\s*$/i, "")
 	  .trim();
-	const jsonStart = cleaned.indexOf("{");
-	const jsonEnd = cleaned.lastIndexOf("}");
-	if (jsonStart !== -1 && jsonEnd > jsonStart) {
-	  let parsed = JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1));
-	  if (typeof parsed.answer === "string") {
-		const inner = parsed.answer.trim();
-		if (inner.startsWith("{")) {
-		  try {
-			const nested = JSON.parse(inner);
-			if (nested.answer && Array.isArray(nested.references)) {
-			  parsed = nested;
-			}
-		  } catch {}
+
+	const tryExtract = (startIdx: "first" | "last") => {
+	  const jsonStart =
+		startIdx === "last"
+		  ? cleaned.lastIndexOf("{")
+		  : cleaned.indexOf("{");
+	  const jsonEnd = cleaned.lastIndexOf("}");
+	  if (jsonStart === -1 || jsonEnd <= jsonStart) return null;
+	  const raw = cleaned.slice(jsonStart, jsonEnd + 1);
+	  try {
+		let parsed = JSON.parse(raw);
+		if (typeof parsed.answer === "string") {
+		  const inner = parsed.answer.trim();
+		  if (inner.startsWith("{")) {
+			try {
+			  const nested = JSON.parse(inner);
+			  if (nested.answer && Array.isArray(nested.references)) {
+				parsed = nested;
+			  }
+			} catch {}
+		  }
 		}
-	  }
-	  if (parsed.answer && Array.isArray(parsed.references)) {
-		return parsed;
-	  }
-	}
+		if (parsed.answer && Array.isArray(parsed.references)) {
+		  return parsed as ParsedResponse;
+		}
+	  } catch {}
+	  return null;
+	};
+
+	const result = tryExtract("last") ?? tryExtract("first");
+	if (result) return result;
   } catch {}
   return { answer: text, references: [] };
 }
@@ -74,9 +164,16 @@ function buildInitialParsedResponses(
 ): Map<string, ParsedResponse> {
   const map = new Map<string, ParsedResponse>();
   for (const m of messages) {
-	if (m.role === "AI") {
-	  map.set(m.id, parseAiResponse(m.content));
-	}
+	if (m.role !== "AI") continue;
+	const parsed = parseAiResponse(m.content);
+	// If parseAiResponse couldn't extract references but citations are stored, use them
+	const refs =
+	  parsed.references.length > 0
+		? parsed.references
+		: (m as any).citations && Array.isArray((m as any).citations)
+		  ? (m as any).citations
+		  : [];
+	map.set(m.id, { answer: parsed.answer, references: refs });
   }
   return map;
 }
@@ -128,9 +225,16 @@ export function ChatInterface({
 	  body: { projectId },
 	}),
 	onFinish: ({ message }) => {
-	  const text = getMessageText(message);
+	  const parsed = getMessageAnswer(message);
+	  console.log("[ChatInterface] onFinish message:", {
+		id: message.id,
+		parts: message.parts,
+		parsed,
+		hasTextParts: message.parts?.some(p => p.type === 'text'),
+		textContent: message.parts?.filter(p => p.type === 'text').map(p => (p as any).text).join(''),
+	  });
 	  setParsedResponses(
-		(prev) => new Map(prev).set(message.id, parseAiResponse(text)),
+		(prev) => new Map(prev).set(message.id, parsed),
 	  );
 	},
   });
@@ -225,9 +329,9 @@ export function ChatInterface({
 	  const next = new Map(prev);
 	  for (const message of messages) {
 		if (message.role !== "assistant" || next.has(message.id)) continue;
-		const text = getMessageText(message);
-		if (!text.trim()) continue;
-		next.set(message.id, parseAiResponse(text));
+		const parsed = getMessageAnswer(message);
+		if (!parsed.answer) continue;
+		next.set(message.id, parsed);
 		changed = true;
 	  }
 	  return changed ? next : prev;
