@@ -21,6 +21,7 @@ import Markdown from "react-markdown";
 import TextToSpeech from "./TextToSpeech";
 import SpeechToText from "./SpeechToText";
 import type { ProjectMessage } from "@/app/actions/handleGetProjectMessages";
+import { handleGetLastMessage } from "@/app/actions/handleGetProjectMessages";
 
 type ParsedResponse = {
   answer: string;
@@ -191,10 +192,12 @@ export function ChatInterface({
   projectId,
   recommendationQns = [],
   initialMessages = [],
+  onNavigateToPage,
 }: {
   projectId: string;
   recommendationQns?: string[];
   initialMessages?: ProjectMessage[];
+  onNavigateToPage?: (documentId?: string, pageNumber?: number | null) => void;
 }) {
   const uiMessages = useMemo(
 	() => dbMessagesToUIMessages(initialMessages),
@@ -225,14 +228,22 @@ export function ChatInterface({
 	  body: { projectId },
 	}),
 	onFinish: ({ message }) => {
-	  const parsed = getMessageAnswer(message);
-	  console.log("[ChatInterface] onFinish message:", {
-		id: message.id,
-		parts: message.parts,
-		parsed,
-		hasTextParts: message.parts?.some(p => p.type === 'text'),
-		textContent: message.parts?.filter(p => p.type === 'text').map(p => (p as any).text).join(''),
-	  });
+	  let parsed = getMessageAnswer(message);
+
+	  if (parsed.answer && parsed.references.length === 0) {
+		handleGetLastMessage(projectId).then((last) => {
+		  if (last) {
+			const dbParsed = parseAiResponse(last.content);
+			if (dbParsed.references.length > 0) {
+			  parsed = dbParsed;
+			  setParsedResponses(
+				(prev) => new Map(prev).set(message.id, parsed),
+			  );
+			}
+		  }
+		});
+	  }
+
 	  setParsedResponses(
 		(prev) => new Map(prev).set(message.id, parsed),
 	  );
@@ -504,6 +515,18 @@ export function ChatInterface({
 								  {icon}
 								  {label}
 								</a>
+							  ) : ref.pageNumber ? (
+								<button
+								  key={i}
+								  type="button"
+								  onClick={() =>
+									onNavigateToPage?.(ref.documentId, ref.pageNumber)
+								  }
+								  className={chipClass}
+								>
+								  {icon}
+								  {label}
+								</button>
 							  ) : (
 								<span key={i} className={chipClass}>
 								  {icon}

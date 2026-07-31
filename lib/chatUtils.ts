@@ -1,8 +1,8 @@
 import { prisma } from "./prisma";
 import { MessageRole } from "@/generated/prisma/enums";
 
-const LAST_N_MESSAGES = 10;
-const SUMMARIZE_EVERY = 10;
+const LAST_N_MESSAGES = 20;
+const SUMMARIZE_EVERY = 20;
 
 export async function saveMessage(
   userId: string,
@@ -120,7 +120,7 @@ export async function updateSummary(
 	{
 	  role: "system",
 	  content:
-		"You are a conversation summarizer. Compress the following conversation into a concise summary that captures key topics, decisions, and context. Keep it under 300 words. Output ONLY the summary text, nothing else.",
+		"You are a conversation summarizer. Compress the following conversation into a concise summary that captures key topics, decisions, and context. Keep it under 800 words. Output ONLY the summary text, nothing else.",
 	},
 	{
 	  role: "user",

@@ -5,7 +5,7 @@ import {
   ZoomMode,
   type PDFViewerRef,
 } from "@embedpdf/react-pdf-viewer";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChatInterface } from "./ChatInterface";
 import { ProjectWithDocuments } from "@/lib/data";
 import { ProjectMessage } from "@/app/actions/handleGetProjectMessages";
@@ -42,6 +42,8 @@ export default function CustomViewer({
   const [documentMenuOpen, setDocumentMenuOpen] = useState(false);
   const [viewerReady, setViewerReady] = useState(false);
   const registeredRegistryRef = useRef<unknown>(null);
+  const scrollCapabilityRef = useRef<{ scrollToPage: (opts: { pageNumber: number; behavior?: string }) => void } | null>(null);
+  const pendingPageNavRef = useRef<number | null>(null);
 
   useEffect(() => {
 	setViewerReady(false);
@@ -139,6 +141,16 @@ export default function CustomViewer({
 	const commands = registry.getPlugin("commands")?.provides?.();
 	const ui = registry.getPlugin("ui")?.provides?.();
 
+	const scroll = registry.getPlugin("scroll")?.provides?.();
+	if (scroll) {
+	  scrollCapabilityRef.current = scroll;
+	  const pending = pendingPageNavRef.current;
+	  if (pending !== null) {
+		pendingPageNavRef.current = null;
+		scroll.scrollToPage({ pageNumber: pending, behavior: "smooth" });
+	  }
+	}
+
 	if (!commands || !ui) return;
 
 	commands.registerCommand({
@@ -225,6 +237,27 @@ export default function CustomViewer({
 	}
   };
 
+  const handleNavigateToPage = useCallback(
+	(documentId?: string, pageNumber?: number | null) => {
+	  if (!pageNumber) return;
+
+	  if (documentId && documentId !== selectedDocument.id) {
+		const target = documents.find((d) => d.id === documentId);
+		if (target) {
+		  pendingPageNavRef.current = pageNumber;
+		  setSelectedDocument(target);
+		  return;
+		}
+	  }
+
+	  scrollCapabilityRef.current?.scrollToPage({
+		pageNumber,
+		behavior: "smooth",
+	  });
+	},
+	[selectedDocument.id, documents],
+  );
+
   return (
 	<div className="grid h-full min-h-0 grid-cols-1 overflow-hidden lg:grid-cols-3">
 	  <div className="relative min-h-0 overflow-hidden border-r border-border bg-background lg:col-span-2">
@@ -273,6 +306,7 @@ export default function CustomViewer({
 			(q) => q.questionText,
 		  )}
 		  initialMessages={initialMessages}
+		  onNavigateToPage={handleNavigateToPage}
 		/>
 	  </aside>
 	</div>

@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 		  publicMetadata: { role: "free" },
 		});
 	  } catch (error) {
-		throw new Error("Failed to set user role");
+		console.error("Failed to set user role metadata:", error);
 	  }
 	}
 	return new Response("Webhook received", { status: 200 });

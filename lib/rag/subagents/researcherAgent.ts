@@ -95,15 +95,16 @@ export const researcherAgent = tool(
 		  validChunkIds.has(c.id),
 		);
 
-		console.log(
-		  "researcherAgent: valid chunks:",
-		  validChunks.length,
-		  "/",
-		  rerankedChunks.length,
-		);
+		// console.log(
+		//   "researcherAgent: valid chunks:",
+		//   validChunks.length,
+		//   "/",
+		//   rerankedChunks.length,
+		// );
 
 		if (validChunks.length > 0) {
 		  return validChunks.map((c) => ({
+			// content: (c.isTable ? c.summary : c.content).slice(0, 800),
 			content: c.isTable ? c.summary : c.content,
 			score: c.relevanceScore,
 			metadata: {
@@ -115,9 +116,9 @@ export const researcherAgent = tool(
 		  }));
 		}
 
-		console.log(
-		  `researcherAgent: attempt ${attempt + 1} produced no valid chunks${isRetry ? ", retry exhausted" : ", retrying with more specific queries"}`,
-		);
+		// console.log(
+		//   `researcherAgent: attempt ${attempt + 1} produced no valid chunks${isRetry ? ", retry exhausted" : ", retrying with more specific queries"}`,
+		// );
 	  }
 
 	  return "NO_RELEVANT_DATA_FOUND";

@@ -47,3 +47,37 @@ export async function handleGetProjectMessages(
 	createdAt: m.createdAt.toISOString(),
   }));
 }
+
+export async function handleGetLastMessage(
+  projectId: string,
+): Promise<ProjectMessage | null> {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) return null;
+
+  const dbUser = await prisma.user.findUnique({
+	where: { clerkUserId },
+	select: { id: true },
+  });
+  if (!dbUser || !isValidObjectId(dbUser.id)) return null;
+
+  const message = await prisma.message.findFirst({
+	where: { projectId, userId: dbUser.id, role: "AI" },
+	orderBy: { messageNumber: "desc" },
+	select: {
+	  id: true,
+	  role: true,
+	  content: true,
+	  citations: true,
+	  createdAt: true,
+	},
+  });
+  if (!message) return null;
+
+  return {
+	id: message.id,
+	role: message.role,
+	content: message.content,
+	citations: message.citations,
+	createdAt: message.createdAt.toISOString(),
+  };
+}
